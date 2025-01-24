@@ -1,0 +1,266 @@
+---
+title: "01_Script"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (2.7 Model de Objetos)](../02_Working_with_data/07_Objects.Rmd) \| [Próximo (Más detalles sobre las funciones)](02_More_functions.Rmd)
+
+### 3.1 Creación de scripts
+
+En esta parte, analizamos más de cerca la práctica de escribir scripts de Python.
+
+#### ¿Qué es un script?
+
+Un *script* es un programa que ejecuta una serie de instrucciones y se detiene.
+
+``` python
+# program.py
+
+declaración1
+declaración2
+declaración3
+...
+```
+
+Hasta este punto, hemos estado escribiendo principalmente scripts.
+
+#### Un problema
+
+Si escribe un script útil, crecerá en características y funcionalidades. Es posible que desee aplicarlo a otros problemas relacionados. Con el tiempo, podría convertirse en una aplicación crítica. Y si no tienes cuidado, puede convertirse en un gran lío. Así que, organicémonos.
+
+#### Definición de cosas
+
+Los nombres siempre deben definirse antes de que se utilicen más adelante.
+
+``` python
+def square(x):
+    return x*x
+
+a = 42
+b = a + 2 # Requiere que `a` esté definido
+
+z = square(b) # Requiere que `square` y `b` estén definidos
+```
+
+**El orden es importante.** Casi siempre colocas las definiciones de variables y funciones cerca de la parte superior.
+
+#### Definición de funciones
+
+Es una buena idea poner todo el código relacionado con una sola *tarea* en un solo lugar. Usa una función.
+
+``` python
+def read_prices(filename):
+    prices = {}
+    with open(filename) as f:
+        f_csv = csv.reader(f)
+        for row in f_csv:
+            prices[row[0]] = float(row[1])
+    return prices
+```
+
+Una función también simplifica las operaciones repetidas.
+
+``` python
+oldprices = read_prices('oldprices.csv')
+newprices = read_prices('newprices.csv')
+```
+
+#### ¿Qué es una función?
+
+Una función es una secuencia de instrucciones con nombre.
+
+``` python
+def funcname(args):
+    statement
+    statement
+    ...
+    return result
+```
+
+*Cualquier* instrucción de Python se puede utilizar dentro de ella.
+
+``` python
+def foo():
+    import math
+    print(math.sqrt(2))
+    help(math)
+```
+
+No hay instrucciones *especiales* en Python (lo que hace que sea fácil de recordar).
+
+#### Definición de función
+
+Las funciones se pueden *definir* en cualquier orden.
+
+``` python
+def foo(x):
+    bar(x)
+
+def bar(x):
+    statements
+
+# O
+def bar(x):
+    statements
+
+def foo(x):
+    bar(x)
+```
+
+Las funciones solo se deben definir antes de *utilizarse* (o llamarse) durante la ejecución del programa.
+
+``` python
+foo(3) # foo ya debe estar definido
+```
+
+Estilísticamente, es probablemente más común ver funciones definidas de manera *de abajo hacia arriba*.
+
+#### Estilo de abajo hacia arriba
+
+Las funciones se tratan como bloques de construcción. Los bloques más pequeños/simples van primero.
+
+``` python
+# myprogram.py
+def foo(x):
+    ...
+
+def bar(x):
+    ...
+    foo(x) # Definido arriba
+    ...
+
+def spam(x):
+    ...
+    bar(x) # Definido arriba
+    ...
+
+spam(42) # El código que usa las funciones aparece al final
+```
+
+Las funciones posteriores se basan en funciones anteriores. Nuevamente, esto es solo una cuestión de estilo. Lo único que importa en el programa anterior es que la llamada a `spam(42)` va al final.
+
+#### Diseño de funciones
+
+Idealmente, las funciones deberían ser una *caja negra*. Solo deberían operar en entradas pasadas y evitar variables globales y efectos secundarios misteriosos. Sus principales objetivos: *Modularidad* y *Predictibilidad*.
+
+#### Cadenas de documentación
+
+Es una buena práctica incluir la documentación en forma de cadena de documentación. Las cadenas de documentación son cadenas que se escriben inmediatamente después del nombre de la función. Alimentan `help()`, IDEs y otras herramientas.
+
+``` python
+def read_prices(filename):
+    '''
+    Leer precios de un archivo CSV de nombre y datos de precios
+    '''
+    prices = {}
+    with open(filename) as f:
+      f_csv = csv.reader(f)
+      for row in f_csv:
+          prices[row[0]] = float(row[1])
+    return prices
+```
+
+Una buena práctica para las cadenas de documentación es escribir un resumen breve de una oración de lo que hace la función. Si se necesita más información, incluya un breve ejemplo de uso junto con una descripción más detallada de los argumentos.
+
+#### Anotaciones de tipo
+
+También puede agregar sugerencias de tipo opcionales a las definiciones de funciones.
+
+``` python
+def read_prices(filename: str) -> dict:
+    '''
+    Leer precios de un archivo CSV de nombre y datos de precios
+    '''
+    prices = {}
+    with open(filename) as f:
+      f_csv = csv.reader(f)
+      for row in f_csv:
+          prices[row[0]] = float(row[1])
+    return prices
+```
+
+Las sugerencias no hacen nada operativamente. Son puramente informativas. Sin embargo, pueden ser utilizadas por IDE, verificadores de código y otras herramientas para hacer más.
+
+#### Ejercicios
+
+En la sección 2, escribió un programa llamado `report.py` que imprimía un informe que mostraba el rendimiento de una cartera de acciones. Este programa constaba de algunas funciones. Por ejemplo:
+
+``` python
+# report.py
+import csv
+
+def read_portfolio(filename):
+    '''
+    Leer un archivo de cartera de acciones en una lista de diccionarios con claves
+    nombre, acciones y precio.
+    '''
+    portfolio = []
+    with open(filename) as f:
+        rows = csv.reader(f)
+        headers = next(rows)
+
+        for row in rows:
+            record = dict(zip(headers, row))
+            stock = {
+                'name' : record['name'],
+                'shares' : int(record['shares']),
+                'price' : float(record['price'])
+            }
+            portfolio.append(stock)
+    return portfolio
+...
+```
+
+Sin embargo, también había partes del programa que solo realizaban una serie de cálculos programados. Este código apareció cerca del final del programa. Por ejemplo:
+
+``` python
+...
+
+# Generar el informe
+
+headers = ('Name', 'Shares', 'Price', 'Change')
+print('%10s %10s %10s %10s'  % headers)
+print(('-' * 10 + ' ') * len(headers))
+for row in report:
+    print('%10s %10d %10.2f %10.2f' % row)
+...
+```
+
+En este ejercicio, tomaremos este programa y lo organizaremos un poco más en torno al uso de funciones.
+
+##### Ejercicio 3.1: Estructurar un programa como una colección de funciones
+
+Modifique su programa `report.py` para que todas las operaciones principales, incluidos los cálculos y la salida, se realicen mediante una colección de funciones. Específicamente:
+
+-   Cree una función `print_report(report)` que imprima el informe. \* Cambie la última parte del programa para que no sea más que una serie de llamadas de función y ningún otro cálculo.
+
+##### Ejercicio 3.2: Creación de una función de nivel superior para la ejecución del programa
+
+Tome la última parte de su programa y empaquetela en una sola función `portfolio_report(portfolio_filename, prices_filename)`. Haga que la función funcione de modo que la siguiente llamada de función cree el informe como antes:
+
+``` python
+portfolio_report('Data/portfolio.csv', 'Data/prices.csv')
+```
+
+En esta versión final, su programa no será más que una serie de definiciones de funciones seguidas de una única llamada de función a `portfolio_report()` al final (que ejecuta todos los pasos involucrados en el programa).
+
+Al convertir su programa en una única función, se vuelve fácil ejecutarlo en diferentes entradas. Por ejemplo, prueba estas declaraciones de forma interactiva después de ejecutar tu programa:
+
+``` python
+>>> portfolio_report('Data/portfolio2.csv', 'Data/prices.csv')
+... Observa la salida ...
+>>> files = ['Data/portfolio.csv', 'Data/portfolio2.csv']
+>>> for name in files:
+        print(f'{name:-^43s}')
+        portfolio_report(name, 'Data/prices.csv')
+        print()
+
+... Observa la salida ...
+>>>
+```
+
+##### Comentario
+
+Python hace que sea muy fácil escribir código de script relativamente desestructurado, en el que solo tienes un archivo con una secuencia de declaraciones. En el panorama general, casi siempre es mejor utilizar funciones siempre que puedas. En algún momento, ese script crecerá y desearás tener un poco más de organización. Además, un hecho poco conocido es que Python se ejecuta un poco más rápido si se utilizan funciones.
+
+[Contenido](../Contents.Rmd) \| [Anterior (2.7 Model de Objetos)](../02_Working_with_data/07_Objects.Rmd) \| [Próximo (Más detalles sobre las funciones)](02_More_functions.Rmd)

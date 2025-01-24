@@ -1,0 +1,17 @@
+---
+title: "00_Overview"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (5 Funcionamiento interno de los objetos de Python)](../05_Object_model/00_Overview.Rmd) \| [Próximo (7. Algunos temas avanzados)](../07_Advanced_Topics/00_Overview.Rmd)
+
+# 6. Generadores
+
+La iteración (el bucle `for`) es uno de los patrones de programación más comunes en Python. Los programas realizan muchas iteraciones para procesar listas, leer archivos, consultar bases de datos y más. Una de las características más poderosas de Python es la capacidad de personalizar y redefinir la iteración en forma de una denominada "función generadora". Esta sección presenta este tema. Al final, escribirá algunos programas que procesan algunos datos de transmisión en tiempo real de una manera interesante.
+
+-   [6.1 Protocolo de iteración](01_Iteration_protocol.md)
+-   [6.2 Personalización de la iteración con generadores](02_Customizing_iteration.md)
+-   [6.3 Problemas y flujos de trabajo de productores y consumidores](03_Productores_consumidores.md)
+-   [6.4 Expresiones de generador](04_More_generators.md)
+
+[Contenido](../Contents.Rmd) \| [Anterior (5 Funcionamiento interno de los objetos de Python)](../05_Object_model/00_Overview.Rmd) \| [Próximo (7. Algunos temas avanzados)](../07_Advanced_Topics/00_Overview.Rmd)

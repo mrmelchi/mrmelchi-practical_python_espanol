@@ -1,0 +1,230 @@
+---
+title: "03_Returning_functions"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (7.2 Funciones anónimas y lambda)](02_Anonymous_function.Rmd) \| [Próximo (7.4 Decoradores de funciones)](04_Function_decorators.Rmd)
+
+### 7.3 Retornando Funciones y clousures
+
+Esta sección presenta la idea de usar funciones para crear otras funciones.
+
+#### Introducción
+
+Considere la siguiente función.
+
+``` python
+def add(x, y):
+    def do_add():
+        print('Sumando', x, y)
+        return x + y
+    return do_add
+```
+
+Esta es una función que devuelve otra función.
+
+``` python
+>>> a = add(3,4)
+>>> a
+<function do_add at 0x6a670>
+>>> a()
+Sumando 3 4
+7
+```
+
+#### Variables locales
+
+Observe cómo la función interna hace referencia a las variables definidas por la función externa.
+
+``` python
+def add(x, y):
+    def do_add():
+        # `x` e `y` se definen arriba de `add(x, y)`
+        print('Sumando ', x, y)
+        return x + y
+    return do_add
+```
+
+Observe además que esas variables se mantienen vivas de alguna manera después de que `add()` haya terminado.
+
+``` python
+>>> a = add(3,4)
+>>> a
+<function do_add at 0x6a670>
+>>> a()
+Sumando 3 4 # ¿De dónde provienen estos valores?
+7
+```
+
+#### `Clousures`
+
+Cuando se devuelve una función interna como resultado, esa función interna se conoce como *clousure*.
+
+``` python
+def add(x, y):
+    # `do_add` es un clousure
+    def do_add():
+        print('Sumando', x, y)
+        return x + y
+    return do_add
+```
+
+*Característica esencial: `clousures` conserva los valores de todas las variables necesarias para que la función se ejecute correctamente más adelante.* Piense en `Clousures` como una función más un entorno adicional que contiene los valores de las variables de las que depende.
+
+#### Uso de `Clousures`
+
+`Clousures` son una característica esencial de Python. Sin embargo, su uso suele ser sutil. Aplicaciones comunes:
+
+-   Uso en funciones de devolución de llamada.
+-   Evaluación retrasada.
+-   Funciones de decorador (más adelante).
+
+#### Evaluación retrasada
+
+Considere una función como esta:
+
+``` python
+def after(seconds, func):
+    import time
+    time.sleep(seconds)
+    func()
+```
+
+Ejemplo de uso:
+
+``` python
+def greeting():
+    print('Hola Guido')
+
+after(30, greeting)
+```
+
+`after` ejecuta la función suministrada... más tarde.
+
+`Clousures` llevan información adicional.
+
+``` python
+def add(x, y):
+    def do_add():
+        print(f'Sumando {x} + {y} -> {x+y}')
+    return do_add
+
+def after(seconds, func):
+    import time
+    time.sleep(seconds)
+    func()
+
+after(30, add(2, 3))
+# `do_add` tiene las referencias x -> 2 e y -> 3
+```
+
+#### Repetición de código
+
+`Clousures` también se pueden utilizar como técnica para evitar la repetición excesiva de código. Puede escribir funciones que generen código.
+
+#### Ejercicios
+
+##### Ejercicio 7.7: Uso de clousures para evitar la repetición
+
+Una de las características más poderosas de los `clousures` es su uso para generar código repetitivo. Si vuelve a consultar [Ejercicio 5.7](../05_Object_model/02_Classes_encapsulation), recuerde el código para definir una propiedad con verificación de tipos.
+
+``` python
+class Stock:
+    def __init__(self, name, shares, price):
+        self.name = name
+        self.shares = shares
+        self.price = price
+        ...
+    @property
+    def shares(self):
+        return self._shares
+
+    @shares.setter
+    def shares(self, value):
+        if not isinstance(value, int):
+            raise TypeError('Expected int')
+        self._shares = value
+        ...
+```
+
+En lugar de escribir ese código una y otra vez, puede crearlo automáticamente utilizando un `clousure`.
+
+Crea un archivo `typedproperty.py` y pon el siguiente código en él:
+
+``` python
+# typedproperty.py
+
+def typedproperty(name, expected_type):
+    private_name = '_' + name
+    
+    @property
+    def prop(self):
+        return getattr(self, private_name)
+    
+    @prop.setter
+    def prop(self, value):
+        if not isinstance(value, expected_type):
+            raise TypeError(f'Esperado un {expected_type}')
+        setattr(self, private_name, value)
+
+    return prop
+```
+
+Ahora, pruébalo definiendo una clase como esta:
+
+``` python
+from typedproperty import typedproperty
+
+class Stock:
+    name = typedproperty('name', str)
+    shares = typedproperty('shares', int)
+    price = typedproperty('price', float)
+
+    def __init__(self, name, shares, price):
+        self.name = name
+        self.shares = shares
+        self.price = price
+```
+
+Intenta crear una instancia y verificar que la comprobación de tipos funciona.
+
+``` python
+>>> s = Stock('IBM', 50, 91.1)
+>>> s.name
+'IBM'
+>>> s.shares = '100'
+... debería obtener un TypeError ...
+>>>
+```
+
+##### Ejercicio 7.8: Simplificación de llamadas a funciones
+
+En el ejemplo anterior, los usuarios pueden encontrar llamadas como `typedproperty('shares', int)` un poco verbosas para escribir, especialmente si se repiten mucho. Agregue las siguientes definiciones al archivo `typedproperty.py`:
+
+``` python
+String = lambda name: typedproperty(name, str)
+Integer = lambda name: typedproperty(name, int)
+Float = lambda name: typedproperty(name, float)
+```
+
+Ahora, reescriba la clase `Stock` para usar estas funciones en su lugar:
+
+``` python
+class Stock:
+    name = String('name')
+    shares = Integer('shares')
+    price = Float('price')
+
+    def __init__(self, name, shares, price):
+        self.name = name
+        self.shares = shares
+        self.price= price
+```
+
+Ah, eso está un poco mejor. La principal conclusión aquí es que `clousures` y `lambda` a menudo se pueden usar para simplificar el código y eliminar repeticiones molestas. Esto suele ser bueno.
+
+##### Ejercicio 7.9: Poniéndolo en práctica
+
+Reescribe la clase `Stock` en el archivo `stock.py` para que use propiedades tipificadas como se muestra.
+
+[Contenido](../Contents.Rmd) \| [Anterior (7.2 Funciones anónimas y lambda)](02_Anonymous_function.Rmd) \| [Próximo (7.4 Decoradores de funciones)](04_Function_decorators.Rmd)

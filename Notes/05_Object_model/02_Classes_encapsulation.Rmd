@@ -1,0 +1,325 @@
+---
+title: "02_Classes_encapsulation"
+output: html_document
+---
+
+[Contenido](../Contenido.md) \| [Anterior (5.1 Diccionarios revisados)](01_Dicts_revisited.md) \| [Siguiente (6 Generadores)](../06_Generadores/00_Descripción general.md)
+
+### 5.2 Clases y encapsulación
+
+Al escribir clases, es común intentar encapsular detalles internos. Esta sección presenta algunos modismos de programación de Python para esto, incluidas las variables y propiedades privadas.
+
+#### Público vs. Privado.
+
+Una de las funciones principales de una clase es encapsular datos y detalles de implementación interna de un objeto. Sin embargo, una clase también define una interfaz *pública* que se supone que el mundo exterior debe usar para manipular el objeto. Esta distinción entre los detalles de implementación y la interfaz pública es importante.
+
+#### Un problema
+
+En Python, casi todo lo relacionado con las clases y los objetos es *abierto*.
+
+* Puede inspeccionar fácilmente los componentes internos de los objetos.
+* Puedes cambiar las cosas a voluntad.
+* No existe una noción sólida de control de acceso (es decir, miembros de clase privados)
+
+Eso es un problema cuando intentas aislar detalles de la *implementación interna*.
+
+#### Encapsulación de Python
+
+Python se basa en convenciones de programación para indicar el uso previsto de algo. Estas convenciones se basan en la denominación. Existe una actitud general de que es responsabilidad del programador observar las reglas
+en lugar de que el lenguaje las imponga.
+
+#### Atributos privados
+
+Cualquier nombre de atributo con `_` inicial se considera *privado*.
+
+```python
+class Person:
+    def __init__(self, name):
+        self._name = 0
+```
+
+Como se mencionó anteriormente, este es solo un estilo de programación. Aún puedes acceder a él y cambiarlo.
+
+```python
+>>> p = Person('Guido')
+>>> p._name
+'Guido'
+>>> p._name = 'Dave'
+>>>
+```
+
+Como regla general, cualquier nombre con un `_` inicial se considera una implementación interna, ya sea una variable, una función o el nombre de un módulo. Si te encuentras usando dichos nombres directamente, probablemente estés haciendo algo mal. Busca una funcionalidad de nivel superior.
+
+#### Atributos simples
+
+Considera la siguiente clase.
+
+```python
+class Stock:
+    def __init__(self, name, shares, price):
+        self.name = name
+        self.shares = shares
+        self.price = price
+```
+
+Una característica sorprendente es que puedes establecer los atributos
+con cualquier valor:
+
+```python
+>>> s = Stock('IBM', 50, 91.1)
+>>> s.shares = 100
+>>> s.shares = "hundred"
+>>> s.shares = [1, 0, 0]
+>>>
+```
+
+Puedes ver eso y pensar que necesitas algunas comprobaciones adicionales.
+
+```python
+s.shares = '50' # Generar un TypeError, esto es una cadena
+```
+
+¿Cómo lo harías?
+
+#### Atributos administrados
+
+Un enfoque: introducir métodos de acceso.
+
+```python
+class Stock:
+    def __init__(self, name, shares, price):
+        self.name = name
+        self.set_shares(shares)
+        self.price = price
+
+    # Función que superpone la operación "get"
+    def get_shares(self):
+        return self._shares
+
+    # Función que superpone la operación "set"
+    def set_shares(self, value):
+        if not isinstance(value, int):
+            raise TypeError('Se espera un int')
+        self._shares = value
+```
+
+Es una lástima que esto rompa todo nuestro código existente. `s.shares = 50` se convierte en `s.set_shares(50)`
+
+#### Propiedades
+
+Existe un enfoque alternativo al patrón anterior.
+
+```python
+class Stock:
+    def __init__(self, name, shares, price):
+        self.name = name
+        self.shares = shares
+        self.price = price
+
+    @property
+    def shares(self):
+        return self._shares
+
+    @shares.setter
+    def shares(self, value):
+        if not isinstance(value, int):
+            raise TypeError('Expected int')
+        self._shares = value
+```
+
+El acceso normal a los atributos ahora activa los métodos getter y setter en `@property` y `@shares.setter`.
+
+```python
+>>> s = Stock('IBM', 50, 91.1)
+>>> s.shares # Disparado por @property
+50
+>>> s.shares = 75 # Disparado por @shares.setter
+>>>
+```
+
+Con este patrón, no se necesitan *cambios* en el código fuente. El nuevo *setter* también se llama cuando hay una asignación dentro de la clase, incluso dentro del método `__init__()`.
+
+```python
+class Stock:
+    def __init__(self, name, shares, price):
+    ...
+    # Esta asignación llama al configurador que aparece a continuación
+    self.shares = shares
+    ...
+
+    ...
+    @shares.setter
+    def shares(self, value):
+        if not isinstance(value, int):
+            raise TypeError('Esperado un int')
+        self._shares = value
+    ```
+
+A menudo existe una confusión entre una propiedad y el uso de nombres privados. Aunque una propiedad usa internamente un nombre privado como `_shares`, el resto de la clase (no la propiedad) puede seguir usando un nombre como `shares`.
+
+Las propiedades también son útiles para los atributos de datos calculados.
+
+```python
+class Stock:
+    def __init__(self, name, shares, price):
+        self.name = name
+        self.shares = shares
+        self.price = price
+
+    @property
+    def cost(self):
+        return self.shares * self.price
+    ...
+```
+
+Esto le permite eliminar los paréntesis adicionales, ocultando el hecho de que en realidad es un método:
+
+```python
+>>> s = Stock('GOOG', 100, 490.1)
+>>> s.shares # Variable de instancia
+100
+>>> s.cost # Valor calculado
+49010.0
+>>>
+```
+
+#### Acceso uniforme
+
+El último ejemplo muestra cómo poner una interfaz más uniforme en un objeto. Si no lo hace, un objeto puede resultar confuso de usar:
+
+```python
+>>> s = Stock('GOOG', 100, 490.1)
+>>> a = s.cost() # Método
+49010.0
+>>> b = s.shares # Atributo de datos
+100
+>>>
+```
+
+¿Por qué se requiere `()` para `cost`, pero no para `shares`? Una propiedad puede solucionar esto.
+
+#### Sintaxis del decorador
+
+La sintaxis `@` se conoce como "decoración". Especifica un modificador que se aplica a la definición de función que sigue inmediatamente.
+
+```python
+...
+@property
+def cost(self):
+    return self.shares * self.price
+```
+
+Se proporcionan más detalles en la [Sección 7](../07_Advanced_Topics/00_Overview).
+
+#### Atributo `__slots__`
+
+Puede restringir el conjunto de nombres de atributos.
+
+```python
+class Stock:
+    __slots__ = ('name','_shares','price')
+    def __init__(self, name, shares, price):
+        self.name = name
+    ...
+```
+
+Se generará un error para otros atributos.
+
+```python
+>>> s = Stock('GOOG', 100, 490.1)
+>>> s.price = 385.15
+>>> s.prices = 410.2
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+AttributeError: 'Stock' object has no attribute 'prices' and no __dict__ for setting new attributes. Did you mean: 'price'?
+```
+
+Aunque esto evita errores y restringe el uso de objetos, en realidad se utiliza para mejorar el rendimiento y hace que Python utilice la memoria de forma más eficiente.
+
+#### Comentarios finales sobre la encapsulación
+
+No se exceda con los atributos privados, las propiedades, los slots, etc. Tienen una finalidad específica y puede verlos al leer otro código Python. Sin embargo, no son necesarios para la mayoría de la codificación del día a día.
+
+#### Ejercicios
+
+##### Ejercicio 5.6: Propiedades simples
+
+Las propiedades son una forma útil de agregar "atributos calculados" a un objeto. En `stock.py`, creó un objeto `Stock`. Observa que en tu objeto hay una ligera inconsistencia en cómo se extraen los diferentes tipos de datos:
+
+```python
+>>> from stock import Stock
+>>> s = Stock('GOOG', 100, 490.1)
+>>> s.shares
+100
+>>> s.price
+490.1
+>>> s.cost()
+49010.0
+>>>
+```
+
+En concreto, observa cómo tienes que añadir el extra () a `cost` porque es un método.
+
+Puedes deshacerte del extra () en `cost()` si lo conviertes en una propiedad. Tome su clase `Stock` y modifíquela para que el cálculo de costos funcione de esta manera:
+
+```python
+>>> ================================= RESTART ==================================
+>>> from stock import Stock
+>>> s = Stock('GOOG', 100, 490.1)
+>>> s.cost
+49010.0
+>>>
+```
+
+Intente llamar a `s.cost()` como una función y observe que no funciona ahora que `cost` se ha definido como una propiedad.
+
+```python
+>>> s.cost()
+... falla ...
+>>>
+```
+
+Hacer este cambio probablemente romperá su programa `pcost.py` anterior. Es posible que deba volver atrás y deshacerse del `()` en el método `cost()`.
+
+##### Ejercicio 5.7: Properties and Setters
+
+Modifique el atributo `shares` para que el valor se almacene en un atributo privado y se utilice un par de funciones con `@property` para garantizar que siempre se establezca en un valor entero. Aquí hay un ejemplo del comportamiento esperado:
+
+```python
+>>> ================================= RESTART ==================================
+>>> from stock import Stock
+>>> s = Stock('GOOG',100,490.10)
+>>> s.shares = 50
+>>> s.shares = 'a lot'
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+TypeError: Esperado un int
+>>>
+```
+
+##### Ejercicio 5.8: Agregar `__slots__`
+
+Modifique la clase `Stock` para que tenga un atributo `__slots__`. Luego, verifique que no se puedan agregar nuevos atributos:
+
+```python
+>>> ================================= RESTART =================================
+>>> from stock import Stock
+>>> s = Stock('GOOG', 100, 490.10)
+>>> s.name
+'GOOG'
+>>> s.blah = 42
+... vea qué sucede...
+>>>
+```
+
+Cuando usa `__slots__`, Python usa una representación interna más eficiente de los objetos. ¿Qué sucede si intenta inspeccionar el diccionario subyacente de `s` arriba?
+
+```python
+>>> s.__dict__
+... vea lo que sucede...
+>>>
+```
+
+Cabe señalar que `__slots__` se utiliza más comúnmente como una optimización en clases que sirven como estructuras de datos. El uso de slots hará que dichos programas utilicen mucha menos memoria y se ejecuten un poco más rápido. Sin embargo, probablemente debería evitar `__slots__` en la mayoría de las otras clases.
+
+[Contenido](../Contenido.md) \| [Anterior (5.1 Revisión de diccionarios)](01_Dicts_revisited.md) \| [Siguiente (6 Generadores)](../06_Generadores/00_Descripción general.md)

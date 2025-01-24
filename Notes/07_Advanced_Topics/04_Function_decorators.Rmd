@@ -1,0 +1,147 @@
+---
+title: "04_Function_decorators"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (7.3 Retornando Funciones y clousures)](03_Returning_functions.Rmd) \| [Próximo (7.5 Métodos estáticos y de clase)](05_Decorated_methods.Rmd)
+
+### 7.4 Decoradores de funciones
+
+Esta sección presenta el concepto de decorador. Este es un tema avanzado del que apenas hemos tocado la superficie.
+
+#### Ejemplo de registro
+
+Considere una función.
+
+``` python
+def add(x, y):
+    return x + y
+```
+
+Ahora, considere la función con algún registro agregado.
+
+``` python
+def add(x, y):
+    print('Llamando a add')
+    return x + y
+```
+
+Ahora una segunda función también con algún registro.
+
+``` python
+def sub(x, y):
+    print('Llamando a sub')
+    return x - y
+```
+
+#### Observación
+
+*Observación: Es algo repetitivo.*
+
+Escribir programas en los que hay mucha replicación de código suele ser muy molesto. Son tediosos de escribir y difíciles de mantener. Especialmente si decides que quieres cambiar su funcionamiento (es decir, un tipo diferente de registro, tal vez).
+
+#### Código que crea el registro
+
+Quizás puedas crear una función que cree funciones con el registro agregado a ellas. Un contenedor.
+
+``` python
+def logged(func):
+    def wrapper(*args, **kwargs):
+        print('Llamando a', func.__name__)
+        return func(*args, **kwargs)
+    return wrapper
+```
+
+Ahora úsalo.
+
+``` python
+def add(x, y):
+    return x + y
+
+logged_add = logged(add)
+```
+
+¿Qué sucede cuando llamas a la función devuelta por `logged`?
+
+``` python
+logged_add(3, 4) # Ves que aparece el mensaje de registro
+```
+
+Este ejemplo ilustra el proceso de creación de una llamada *función contenedora*.
+
+Una función contenedora es una función que envuelve otra función con algunos bits adicionales de procesamiento, pero que por lo demás funciona exactamente de la misma manera que la función original.
+
+``` python
+>>> logged_add(3, 4)
+Llamando a add # Salida adicional. Añadida por la función contenedora
+7
+>>>
+```
+
+*Nota: La función `logged()` crea la función contenedora y la devuelve como resultado.*
+
+#### Decoradores
+
+Poner envoltorios a las funciones es extremadamente común en Python. Es tan común que existe una sintaxis especial para ello.
+
+``` python
+def add(x, y):
+    return x + y
+    
+add = logged(add)
+
+# Sintaxis especial
+@logged
+def add(x, y):
+    return x + y
+```
+
+La sintaxis especial realiza exactamente los mismos pasos que se muestran arriba. Un decorador es simplemente una sintaxis nueva. Se dice que *decora* la función.
+
+#### Comentario
+
+Hay muchos más detalles sutiles sobre los decoradores que los que se han presentado aquí. Por ejemplo, su uso en clases o el uso de múltiples decoradores con una función. Sin embargo, el ejemplo anterior es una buena ilustración de cómo tiende a surgir su uso. Por lo general, es en respuesta a un código repetitivo que aparece en una amplia gama de definiciones de funciones. Un decorador puede mover ese código a una definición central.
+
+#### Ejercicios
+
+##### Ejercicio 7.10: Un decorador para cronometrar
+
+Si define una función, su nombre y módulo se almacenan en los atributos `__name__` y `__module__`. Por ejemplo:
+
+``` python
+>>> def add(x,y):
+        return x+y
+
+>>> add.__name__
+'add'
+>>> add.__module__
+'__main__'
+>>>
+```
+
+En un archivo `timethis.py`, escriba una función decoradora `timethis(func)` que envuelva una función con una capa adicional de lógica que muestre cuánto tiempo tarda una función en ejecutarse. Para ello, rodearás la función con llamadas de temporización como esta:
+
+``` python
+start = time.time()
+r = func(*args,**kwargs)
+end = time.time()
+print('%s.%s: %f' % (func.__module__, func.__name__, end-start))
+```
+
+A continuación, se incluye un ejemplo de cómo debería funcionar tu decorador:
+
+``` python
+>>> from timethis import timethis
+>>> @timethis
+    def countdown(n):
+        while n > 0:
+            n -= 1
+
+>>> countdown(10000000)
+__main__.countdown : 0.076562
+>>>
+```
+
+Discusión: Este decorador `@timethis` se puede colocar delante de cualquier definición de función. Por lo tanto, puedes usarlo como una herramienta de diagnóstico para ajustar el rendimiento.
+
+[Contenido](../Contents.Rmd) \| [Anterior (7.3 Retornando Funciones y clousures)](03_Returning_functions.Rmd) \| [Próximo (7.5 Métodos estáticos y de clase)](05_Decorated_methods.Rmd)

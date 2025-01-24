@@ -1,0 +1,434 @@
+---
+title: "03_Error_checking"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (3.2 Más detalles sobre las
+funciones)](02_More_functions.Rmd) \| [Próximo (3.4
+Módulos)](04_Modules.Rmd)
+
+### 3.3 Comprobación de errores
+
+Aunque las excepciones se introdujeron anteriormente, esta sección
+completa algunos detalles adicionales sobre la comprobación de errores y
+el manejo de excepciones.
+
+#### Cómo fallan los programas
+
+Python no realiza ninguna comprobación o validación de los tipos o
+valores de los argumentos de la función. Una función funcionará con
+cualquier dato que sea compatible con las declaraciones de la función.
+
+``` python
+def add(x, y):
+    return x + y
+
+add(3, 4) # 7
+add('Hello', 'World') # 'HelloWorld'
+add('3', '4') # '34'
+```
+
+Si hay errores en una función, aparecen en tiempo de ejecución (como una
+excepción).
+
+``` python
+def add(x, y):
+  return x + y
+
+>>> add(3, '4')
+Traceback (most recent call last):
+...
+TypeError: unsupported operand type(s) for +:
+'int' and 'str'
+>>>
+```
+
+Para verificar el código, se hace mucho hincapié en las pruebas (que se
+tratan más adelante).
+
+#### Excepciones
+
+Las excepciones se utilizan para señalar errores. Para generar una
+excepción usted mismo, utilice la declaración `raise`.
+
+``` python
+if name not in authorized:
+    raise RuntimeError(f'{name} not authorized')
+```
+
+Para capturar una excepción, utilice `try-except`.
+
+``` python
+try:
+    authenticate(username)
+except RuntimeError as e:
+    print(e)
+```
+
+#### Manejo de excepciones
+
+Las excepciones se propagan al primer `except` coincidente.
+
+``` python
+def grok():
+    ...
+    raise RuntimeError('¡Vaya!') # Excepción generada aquí
+
+def spam():
+    grok() # Llamada que generará la excepción
+
+def bar():
+    try:
+        spam()
+    except RuntimeError as e: # Excepción detectada aquí
+        ...
+
+def foo():
+    try:
+        bar()
+    except RuntimeError as e: # La excepción NO llega aquí
+        ...
+
+foo()
+```
+
+Para manejar la excepción, coloque declaraciones en el bloque `except`.
+Puede agregar cualquier declaración que desee para manejar el error.
+
+``` python
+def grok():...
+    raise RuntimeError('¡Vaya!')
+
+def bar():
+    try:
+        grok()
+    except RuntimeError as e: # Excepción detectada aquí
+        declaraciones # Use esta declaración
+        declaraciones
+        ...
+
+bar()
+```
+
+Después de la manipulación, la ejecución se reanuda con la primera
+declaración después de `try-except`.
+
+``` python
+def grok(): ...
+    raise RuntimeError('¡Vaya!')
+
+def bar():
+    try:
+      grok()
+    except RuntimeError as e: # Excepción detectada aquí
+        declaraciones
+        declaraciones
+        ...
+    declaraciones # Reanuda la ejecución aquí
+    declaraciones # Y continúa aquí
+    ...
+
+bar()
+```
+
+#### Excepciones integradas
+
+Hay alrededor de dos docenas de excepciones integradas. Generalmente el
+nombre de la excepción es indicativo de lo que está mal (por ejemplo, se
+genera un `ValueError` porque usted proporcionó un valor incorrecto).
+Esta no es una lista exhaustiva. Consulte la
+[documentación](https://docs.python.org/3/library/exceptions.html) para
+obtener más información.
+
+``` python
+ArithmeticError
+AssertionError
+EnvironmentError
+EOFError
+ImportError
+IndexError
+KeyboardInterrupt
+KeyError
+MemoryError
+NameError
+ReferenceError
+RuntimeError
+SyntaxError
+SystemError
+TypeError
+ValueError
+```
+
+#### Valores de excepción
+
+Las excepciones tienen un valor asociado. Contiene información más
+específica sobre lo que está mal.
+
+``` python
+raise RuntimeError('Nombre de usuario no válido')
+```
+
+Este valor es parte de la instancia de excepción que se coloca en la
+variable suministrada a `except`.
+
+``` python
+try:
+...
+except RuntimeError as e: # `e` contiene la excepción generada
+...
+```
+
+`e` es una instancia del tipo de excepción. Sin embargo, a menudo parece
+una cadena cuando se imprime.
+
+``` python
+except RuntimeError as e:
+    print('Falló : Razón', e)
+```
+
+#### Captura de múltiples errores
+
+Puedes capturar diferentes tipos de excepciones usando múltiples bloques
+`except`.
+
+``` python
+try:
+...
+except LookupError as e:
+...
+except RuntimeError as e:
+...
+except IOError as e:
+...
+except KeyboardInterrupt as e:
+...
+```
+
+Alternativamente, si las instrucciones para manejarlas son las mismas,
+puede agruparlas:
+
+``` python
+try:
+...
+except (IOError,LookupError,RuntimeError) as e:
+...
+```
+
+#### Capturar todos los errores
+
+Para capturar cualquier excepción, use `Exception` de esta manera:
+
+``` python
+try:
+...
+except Exception: # DANGER. Vea a continuación
+    print('Un error ha ocurrido')
+```
+
+En general, escribir código como ese es una mala idea porque no tendrá
+idea de por qué falló.
+
+#### Forma incorrecta de capturar errores
+
+Esta es la forma incorrecta de usar excepciones.
+
+``` python
+try:
+    go_do_something()
+except Exception:
+    print('La computadora dice no')
+```
+
+Esto captura todos los errores posibles y puede hacer que sea imposible
+depurar cuando el código falla por alguna razón que no esperabas en
+absoluto (por ejemplo, módulo Python desinstalado, etc.).
+
+#### Enfoque un poco mejor
+
+Si vas a capturar todos los errores, este es un enfoque más sensato.
+
+``` python
+try:
+    go_do_something()
+except Exception as e:
+    print('La computadora dice no. Razón :', e)
+```
+
+Informa de una razón específica de la falla. Casi siempre es una buena
+idea tener algún mecanismo para ver o informar errores cuando escribe
+código que captura todas las excepciones posibles.
+
+En general, sin embargo, es mejor capturar el error de la forma más
+específica posible. Solo capture los errores que realmente puede
+manejar. Deje pasar otros errores, tal vez algún otro código pueda
+manejarlos.
+
+#### Volver a generar una excepción
+
+Use `raise` para propagar un error capturado.
+
+``` python
+try:
+    go_do_something()
+except Exception as e:
+    print('La computadora dice no. Razón :', e)
+    raise
+```
+
+Esto le permite tomar medidas (por ejemplo, registrar) y pasar el error
+al autor de la llamada.
+
+#### Mejores prácticas para excepciones
+
+No capture excepciones. Falle rápido y en voz alta. Si es importante,
+alguien más se ocupará del problema. Solo capture una excepción si usted
+es *esa* persona. Es decir, solo captura errores de los que puedas
+recuperarte y seguir adelante de forma sensata.
+
+#### Instrucción `finally`
+
+Especifica el código que debe ejecutarse independientemente de si se
+produce o no una excepción.
+
+``` python
+lock = Lock()
+...
+lock.acquire()
+try:
+  ...
+finally:
+    lock.release() # esto SIEMPRE se ejecutará. Con y sin excepción.
+```
+
+Se utiliza habitualmente para gestionar recursos de forma segura
+(especialmente bloqueos, archivos, etc.).
+
+#### Instrucción `with`
+
+En el código moderno, `try-finally` suele sustituirse por la instrucción
+`with`.
+
+``` python
+lock = Lock()
+with lock:
+    # bloqueo adquirido
+    ...
+# bloqueo liberado
+```
+
+Un ejemplo más familiar:
+
+``` python
+with open(filename) as f:
+    # Use el archivo
+    ...
+# Cierre el archivo
+```
+
+`with` define un *contexto* de uso para un recurso. Cuando la ejecución
+abandona ese contexto, se liberan los recursos. `with` sólo funciona con
+ciertos objetos que han sido programados específicamente para
+soportarlo.
+
+#### Ejercicios
+
+##### Ejercicio 3.8: Generar excepciones
+
+La función `parse_csv()` que escribió en la última sección permite
+seleccionar columnas especificadas por el usuario, pero eso sólo
+funciona si el archivo de datos de entrada tiene encabezados de columna.
+
+Modifique el código para que se genere una excepción si se pasan los
+argumentos `select` y `has_headers=False`. Por ejemplo:
+
+``` python
+>>> parse_csv('Data/prices.csv', select=['name','price'], has_headers=False)
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+File "fileparse.py", line 9, in parse_csv
+raise RuntimeError("select argument require column headers")
+RuntimeError: select argument require column headers
+>>>
+```
+
+Después de agregar esta verificación, puede preguntarse si debería
+realizar otros tipos de verificaciones de integridad en la función. Por
+ejemplo, ¿debería verificar que el nombre del archivo sea una cadena,
+que los tipos sean una lista o algo de esa naturaleza?
+
+Como regla general, generalmente es mejor omitir dichas pruebas y
+simplemente dejar que el programa falle en las entradas incorrectas. El
+mensaje de traceback señalará la fuente del problema y puede ayudar en
+la depuración.
+
+La razón principal para agregar la comprobación anterior es evitar
+ejecutar el código en un modo sin sentido (por ejemplo, usar una función
+que requiere encabezados de columna, pero especificar simultáneamente
+que no hay encabezados).
+
+Esto indica un error de programación por parte del código que realiza la
+llamada. Comprobar los casos que "no deberían ocurrir" suele ser una
+buena idea.
+
+##### Ejercicio 3.9: Captura de excepciones
+
+La función `parse_csv()` que escribiste se usa para procesar todo el
+contenido de un archivo. Sin embargo, en el mundo real, es posible que
+los archivos de entrada tengan datos corruptos, faltantes o sucios.
+Pruebe este experimento:
+
+``` python
+>>> portfolio = parse_csv('Data/missing.csv', types=[str, int, float])
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+File "fileparse.py", line 36, in parse_csv
+row = [func(val) for func, val in zip(types, row)]
+ValueError: invalid literal for int() with base 10: ''
+>>>
+```
+
+Modifique la función `parse_csv()` para capturar todas las excepciones
+`ValueError` generadas durante la creación de registros e imprimir un
+mensaje de advertencia para las filas que no se pueden convertir.
+
+El mensaje debe incluir el número de fila e información sobre el motivo
+por el que falló. Para probar su función, intente leer el archivo
+`Data/missing.csv` anterior. Por ejemplo:
+
+``` python
+>>> portfolio = parse_csv('Data/missing.csv', types=[str, int, float])
+Fila 4: No se pudo convertir ['MSFT', '', '51.23']
+Fila 4: Motivo por el que el literal no es válido para int() con base 10: ''
+Fila 7: No se pudo convertir ['IBM', '', '70.44']
+Fila 7: Motivo por el que el literal no es válido para int() con base 10: ''
+>>>
+>>> portfolio
+[{'price': 32.2, 'name': 'AA', 'shares': 100}, {'price': 91.1, 'name': 'IBM', 'shares': 50}, {'price': 83.44, 'name': 'CAT', 'shares': 150}, {'price': 40,37, 'name': 'GE', 'shares': 95}, {'price': 65,1, 'name': 'MSFT', 'shares': 50}]
+>>>
+```
+
+##### Ejercicio 3.10: Silenciamiento de errores
+
+Modifique la función `parse_csv()` para que los mensajes de error de
+análisis puedan silenciarse si el usuario lo desea explícitamente. Por
+ejemplo:
+
+``` python
+>>> portfolio = parse_csv('Data/missing.csv', types=[str,int,float], silence_errors=True)
+>>> portfolio
+[{'price': 32.2, 'name': 'AA', 'shares': 100}, {'pricename': 'MSFT', 'shares': 50}]
+>>>
+```
+
+El manejo de errores es una de las cosas más difíciles de hacer bien en
+la mayoría de los programas. Como regla general, no debería ignorar los
+errores en silencio. En cambio, es mejor informar los problemas y darle
+al usuario una opción para silenciar el mensaje de error si así lo
+desea.
+
+[Contenido](../Contents.Rmd) \| [Anterior (3.2 Más detalles sobre las
+funciones)](02_More_functions.Rmd) \| [Próximo (3.4
+Módulos)](04_Modules.Rmd)

@@ -1,0 +1,227 @@
+---
+title: "01_Variable_arguments"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (6.4 Expresiones generadoras)](../06_Generadores/04_Más_generadores.Rmd) \| [Próximo (7.2 Funciones anónimas y lambda)](02_Anonymous_function.Rmd)
+
+### 7.1 Argumentos variables
+
+Esta sección cubre argumentos de funciones variables, a veces descritos como "\*args" y "\*\*kwargs".
+
+#### Argumentos de variables posicionales (`*args`)
+
+Se dice que una función que acepta *cualquier número* de argumentos usa argumentos variables. Por ejemplo:
+
+``` python
+def f(x, *args):
+    ...
+```
+
+Llamada de función.
+
+``` python
+f(1,2,3,4,5)
+```
+
+Los argumentos adicionales se pasan como una tupla.
+
+``` python
+def f(x, *args):
+    # x -> 1
+    # args -> (2,3,4,5)
+```
+
+#### Argumentos variables de palabra clave (`*kwargs`)
+
+Una función también puede aceptar cualquier número de argumentos de palabra clave. Por ejemplo:
+
+``` python
+def f(x, y, **kwargs):
+    ...
+```
+
+Llamada de función.
+
+``` python
+f(2, 3, flag=True, mode='fast', header='debug')
+```
+
+Las palabras clave adicionales se pasan en un diccionario.
+
+``` python
+def f(x, y, **kwargs):
+    # x -> 2
+    # y -> 3
+    # kwargs -> { 'flag': True, 'mode': 'fast', 'header': 'debug' }
+```
+
+#### Combinación de ambos
+
+Una función también puede aceptar cualquier número de argumentos variables, tanto de palabras clave como de palabras no clave.
+
+``` python
+def f(*args, **kwargs):
+    ...
+```
+
+Llamada a la función.
+
+``` python
+f(2, 3, flag=True, mode='fast', header='debug')
+```
+
+Los argumentos se separan en componentes posicionales y de palabras clave
+
+``` python
+def f(*args, **kwargs):
+    # args = (2, 3)
+    # kwargs -> { 'flag': True, 'mode': 'fast', 'header': 'debug' }
+    ...
+```
+
+Esta función acepta cualquier combinación de argumentos posicionales o de palabras clave. A veces se utiliza al escribir contenedores o cuando se quieren pasar argumentos a otra función.
+
+#### Pasar tuplas y diccionarios
+
+Las tuplas se pueden expandir en argumentos variables.
+
+``` python
+numbers = (2,3,4)
+f(1, *numbers) # Igual que f(1,2,3,4)
+```
+
+Los diccionarios también se pueden expandir a argumentos de palabras clave.
+
+``` python
+options = {
+    'color' : 'red',
+    'delimiter' : ',',
+    'width' : 400
+}
+f(data, **options)
+# Igual que f(data, color='red', delimiter=',', width=400)
+```
+
+#### Ejercicios
+
+##### Ejercicio 7.1: Un ejemplo simple de argumentos variables
+
+Intenta definir la siguiente función:
+
+``` python
+>>> def avg(x,*more):
+        return float(x+sum(more))/(1+len(more))
+
+>>> avg(10,11)
+10.5
+>>> avg(3,4,5)
+4.0
+>>> avg(1,2,3,4,5,6)
+3.5
+>>>
+```
+
+Observa cómo el parámetro `*more` recopila todos los argumentos adicionales.
+
+##### Ejercicio 7.2: Pasar tuplas y diccionarios como argumentos
+
+Supongamos que lees algunos datos de un archivo y obtienes una tupla como esta:
+
+``` python
+>>> data = ('GOOG', 100, 490.1)
+>>>
+```
+
+Ahora, supongamos que quieres crear un objeto `Stock` a partir de estos datos. Si intentas pasar `data` directamente, no funciona:
+
+```         
+>>> from stock import Stock
+>>> s = Stock(data)
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+TypeError: __init__() takes exactly 4 arguments (2 given)
+>>>
+```
+
+Esto se soluciona fácilmente utilizando `*data` en su lugar. Pruebe esto:
+
+``` python
+>>> s = Stock(*data)
+>>> s
+Stock('GOOG', 100, 490.1)
+>>>
+```
+
+Si tiene un diccionario, puede usar `**` en su lugar. Por ejemplo:
+
+``` python
+>>> data = { 'name': 'GOOG', 'shares': 100, 'price': 490.1 }
+>>> s = Stock(**data)
+Stock('GOOG', 100, 490.1)
+>>>
+```
+
+##### Ejercicio 7.3: Creación de una lista de instancias
+
+En su programa `report.py`, creó una lista de instancias utilizando un código como este:
+
+``` python
+def read_portfolio(filename):
+    '''
+    Lea un archivo de cartera de acciones en una lista de diccionarios con claves
+    name, shares, and price.
+    '''
+
+    with open(filename) as lines:
+        portdicts = fileparse.parse_csv(lines,
+                               select=['name','shares','price'],
+                               types=[str,int,float])
+
+    portfolio = [ Stock(d['name'], d['shares'], d['price'])
+                  for d in portdicts ]
+    return Portfolio(portfolio)
+```
+
+Puede simplificar ese código usando `Stock(**d)` en su lugar. Realice ese cambio.
+
+##### Ejercicio 7.4: Paso de argumentos
+
+La función `fileparse.parse_csv()` tiene algunas opciones para cambiar el delimitador de archivo y para informar errores. Tal vez le gustaría exponer esas opciones a la función `read_portfolio()` anterior. Realice este cambio:
+
+```         
+def read_portfolio(filename, **opts):
+    '''
+    Lea un archivo de cartera de acciones en una lista de diccionarios con las claves name, shares, and price.
+    '''
+    with open(filename) as lines:
+        portdicts = fileparse.parse_csv(lines,
+                                        select=['name','shares','price'],
+                                        types=[str,int,float],
+                                        **opts)
+
+    portfolio = [ Stock(**d) for d in portdicts ]
+    return Portfolio(portfolio)
+```
+
+Una vez que haya realizado el cambio, intente leer un archivo con algunos errores:
+
+``` python
+>>> import report
+>>> port = report.read_portfolio('Data/missing.csv')
+Row 4: Couldn't convert ['MSFT', '', '51.23']
+Row 4: Reason invalid literal for int() with base 10: ''
+Row 7: Couldn't convert ['IBM', '', '70.44']
+Row 7: Reason invalid literal for int() with base 10: ''
+>>>
+```
+
+Ahora, intenta silenciar los errores:
+
+``` python
+>>> import report
+>>> port = report.read_portfolio('Data/missing.csv', silence_errors=True)
+>>>
+```
+
+[Contenido](../Contents.Rmd) \| [Anterior (6.4 Expresiones generadoras)](../06_Generadores/04_Más_generadores.Rmd) \| [Próximo (7.2 Funciones anónimas y lambda)](02_Anonymous_function.Rmd)

@@ -1,0 +1,276 @@
+---
+title: "03_Special_methods"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (4.2 Herencia)](02_Inheritance.Rmd) \| [Próximo (4.4 Definición de excepciones)](04_Defining_exceptions.Rmd)
+
+### 4.3 Métodos especiales
+
+Varias partes del comportamiento de Python se pueden personalizar mediante métodos especiales o los llamados "mágicos". Esta sección presenta esa idea. Además, se analizan el acceso dinámico a los atributos y los métodos enlazados.
+
+#### Introducción
+
+Las clases pueden definir métodos especiales. Estos tienen un significado especial para el intérprete de Python. Siempre están precedidos y seguidos por `__`. Por ejemplo, `__init__`.
+
+``` python
+class Stock(object):
+    def __init__(self):
+    ...
+    
+    def __repr__(self):
+...
+```
+
+Existen docenas de métodos especiales, pero solo veremos algunos ejemplos específicos.
+
+#### Métodos especiales para conversiones de strins
+
+Los objetos tienen dos representaciones de cadena.
+
+``` python
+>>> from datetime import date
+>>> d = date(2012, 12, 21)
+>>> print(d)
+2012-12-21
+>>> d
+datetime.date(2012, 12, 21)
+>>>
+```
+
+La función `str()` se utiliza para crear una salida imprimible agradable:
+
+``` python
+>>> str(d)
+'2012-12-21'
+>>>
+```
+
+La función `repr()` se utiliza para crear una representación más detallada para los programadores.
+
+``` python
+>>> repr(d)
+'datetime.date(2012, 12, 21)'
+>>>
+```
+
+Estas funciones, `str()` y `repr()`, utilizan un par de métodos especiales en la clase para producir la cadena que se mostrará.
+
+``` python
+class Date(object):
+    def __init__(self, year, month, day):
+    self.year = year
+    self.month = month
+    self.day = day
+
+    # Se utiliza con `str()`
+    def __str__(self):
+        return f'{self.year}-{self.month}-{self.day}'
+
+    # Se utiliza con `repr()`
+    def __repr__(self):
+        return f'Date({self.year},{self.month},{self.day})'
+```
+
+*Nota: La convención para `__repr__()` es devolver una cadena que, cuando se ingresa en `eval()`, recreará el objeto subyacente. Si esto no es posible, se utiliza algún tipo de representación de fácil lectura en su lugar.*
+
+#### Métodos especiales para matemáticas
+
+Los operadores matemáticos implican llamadas a los siguientes métodos.
+
+``` python
+a + b       a.__add__(b)
+a - b       a.__sub__(b)
+a * b       a.__mul__(b)
+a / b       a.__truediv__(b)
+a // b      a.__floordiv__(b)
+a % b       a.__mod__(b)
+a << b      a.__lshift__(b)
+a >> b      a.__rshift__(b)
+a & b       a.__and__(b)
+a | b       a.__or__(b)
+a ^ b       a.__xor__(b)
+a ** b      a.__pow__(b)
+-a          a.__neg__()
+~a          a.__invert__()
+abs(a)      a.__abs__()
+```
+
+#### Métodos especiales para el acceso a elementos
+
+Estos son los métodos para implementar contenedores.
+
+``` python
+len(x)      x.__len__()
+x[a]        x.__getitem__(a)
+x[a] = v    x.__setitem__(a,v)
+del x[a]    x.__delitem__(a)
+```
+
+Puedes usarlos en tus clases.
+
+``` python
+class Sequence:
+    def __len__(self):
+        ...
+    def __getitem__(self,a):
+        ...
+    def __setitem__(self,a,v):
+        ...
+    def __delitem__(self,a):
+        ...
+```
+
+#### Invocación al método
+
+Invocar un método es un proceso de dos pasos.
+
+1.  Búsqueda: el operador `.`
+2.  Invocación al método: el operador `()`
+
+``` python
+>>> s = Stock('GOOG',100,490.10)
+>>> c = s.cost  # Busqueda
+>>> c
+<bound method Stock.cost of <Stock object at 0x590d0>>
+>>> c()         # Invocando al método
+49010.0
+>>>
+```
+
+#### Métodos enlazados
+
+Un método que aún no ha sido invocado por el operador de llamada de función ()\` se conoce como *método enlazado*. Opera en la instancia en la que se originó.
+
+``` python
+>>> s = Stock('GOOG', 100, 490.10)
+>>> s
+<Stock object at 0x590d0>
+>>> c = s.cost
+>>> c
+<bound method Stock.cost of <Stock object at 0x590d0>>
+>>> c()
+49010.0
+>>>
+```
+
+Los métodos enlazados suelen ser una fuente de errores no obvios causados ​​por descuido. Por ejemplo:
+
+``` python
+>>> s = Stock('GOOG', 100, 490.10)
+>>> print('Cost : %0.2f' % s.cost)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: float argument required
+>>>
+```
+
+O un comportamiento tortuoso que es difícil de depurar.
+
+``` python
+f = open(filename, 'w')
+...
+f.close # Ups, no hice nada en absoluto. `f` sigue abierto.
+```
+
+En ambos casos, el error se debe a que se olvidó incluir los paréntesis finales. Por ejemplo, `s.cost()` o `f.close()`.
+
+#### Acceso a atributos
+
+Existe una forma alternativa de acceder, manipular y administrar atributos.
+
+``` python
+getattr(obj, 'name') # Igual que obj.name
+setattr(obj, 'name', value) # Igual que obj.name = value
+delattr(obj, 'name') # Igual que del obj.name
+hasattr(obj, 'name') # Comprueba si el atributo existe
+```
+
+Ejemplo:
+
+``` python
+if hasattr(obj, 'x'):
+    x = getattr(obj, 'x'):
+else:
+    x = None
+```
+
+*Nota: `getattr()` también tiene un valor predeterminado útil* arg\*.
+
+``` python
+x = getattr(obj, 'x', None)
+```
+
+#### Ejercicios
+
+##### Ejercicio 4.9: Mejor salida para imprimir objetos
+
+Modifique el objeto `Stock` que definió en `stock.py` para que el método `__repr__()` produzca una salida más útil. Por ejemplo:
+
+``` python
+>>> goog = Stock('GOOG', 100, 490.1)
+>>> goog
+Stock('GOOG', 100, 490.1)
+>>>
+```
+
+Observa lo que sucede cuando lees una cartera de acciones y visualizas la lista resultante después de haber realizado estos cambios. Por ejemplo:
+
+```         
+>>> import report
+>>> portfolio = report.read_portfolio('Data/portfolio.csv')
+>>> portfolio
+... observa cuál es el resultado...
+>>>
+```
+
+##### Ejercicio 4.10: Un ejemplo de uso de getattr()
+
+`getattr()` es un mecanismo alternativo para leer atributos. Se puede utilizar para escribir código extremadamente flexible. Para comenzar, pruebe este ejemplo:
+
+``` python
+>>> import stock
+>>> s = stock.Stock('GOOG', 100, 490.1)
+>>> columns = ['name', 'shares']
+>>> for colname in columns:
+        print(colname, '=', getattr(s, colname))
+
+name = GOOG
+shares = 100
+>>>
+```
+
+Observe con atención que los datos de salida están determinados completamente por los nombres de los atributos que se enumeran en la variable `columnas`.
+
+En el archivo `tableformat.py`, tome esta idea y amplíela a una función generalizada `print_table()` que imprima una tabla que muestre los atributos especificados por el usuario de una lista de objetos arbitrarios. Al igual que con la función `print_report()` anterior, `print_table()` también debe aceptar una instancia de `TableFormatter` para controlar el formato de salida. Así es como debería funcionar:
+
+``` python
+>>> import report
+>>> portfolio = report.read_portfolio('Data/portfolio.csv')
+>>> from tableformat import create_formatter, print_table
+>>> formatter = create_formatter('txt')
+>>> print_table(portfolio, ['name','shares'], formatter)
+      name     shares
+---------- ----------
+        AA        100
+       IBM         50
+       CAT        150
+      MSFT        200
+        GE         95
+      MSFT         50
+       IBM        100
+
+>>> print_table(portfolio, ['name','shares','price'], formatter)
+      name     shares      price
+---------- ---------- ----------
+        AA        100       32.2
+       IBM         50       91.1
+       CAT        150      83.44
+      MSFT        200      51.23
+        GE         95      40.37
+      MSFT         50       65.1
+       IBM        100      70.44
+>>>
+```
+
+[Contenido](../Contents.Rmd) \| [Anterior (4.2 Herencia)](02_Inheritance.Rmd) \| [Próximo (4.4 Definición de una nueva excepción)](04_Defining_exceptions.Rmd)

@@ -1,0 +1,159 @@
+---
+title: "02_Anonymous_function"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (7.1 Funciones con argumentos variables)](01_Variable_arguments.Rmd) \| [Próximo (7.3 Retornando Funciones y clousures)](03_Returning_functions.Rmd)
+
+### 7.2 Funciones anónimas y Lambda
+
+#### Revisión del ordenamiento de listas
+
+Las listas se pueden ordenar *in situ*. Utilizando el método `sort`.
+
+``` python
+s = [10,1,7,3]
+s.sort() # s = [1,3,7,10]
+```
+
+Puede ordenar en orden inverso.
+
+``` python
+s = [10,1,7,3]
+s.sort(reverse=True) # s = [10,7,3,1]
+```
+
+Parece bastante simple. Sin embargo, ¿cómo ordenamos una lista de diccionarios?
+
+``` python
+[{'name': 'AA', 'price': 32,2, 'shares': 100},
+{'name': 'IBM', 'price': 91,1, 'shares': 50},
+{'name': 'CAT', 'price': 83,44, 'shares': 150},
+{'name': 'MSFT', 'price': 51,23, 'shares': 200},
+{'name': 'GE', 'price': 40,37, 'shares': 95},
+{'name': 'MSFT', 'price': 65,1, 'shares': 50},
+{'name': 'IBM', 'price': 70,44, 'shares': 100}]
+```
+
+¿Con qué criterios?
+
+Puede guiar la clasificación mediante una *función clave*. La *función clave* es una función que recibe el diccionario y devuelve el valor de interés para la clasificación.
+
+``` python
+def stock_name(s):
+    return s['name']
+
+portfolio.sort(key=stock_name)
+```
+
+A continuación se muestra el resultado.
+
+``` python
+# Verifica cómo se ordenan los diccionarios por la clave `name`
+[
+{'name': 'AA', 'price': 32.2, 'shares': 100},
+{'name': 'CAT', 'price': 83.44, 'shares': 150},
+{'name': 'GE', 'price': 40.37, 'shares': 95},
+{'name': 'IBM', 'price': 91.1, 'shares': 50},
+{'name': 'IBM', 'price': 70.44, 'shares': 100},
+{'name': 'MSFT', 'price': 51.23, 'shares': 200},
+{'name': 'MSFT', 'price': 65.1, 'shares': 50}
+]
+```
+
+#### Funciones de devolución de llamada
+
+En el ejemplo anterior, la función clave es un ejemplo de una función de devolución de llamada. El método `sort()` "devuelve la llamada" a una función que usted proporciona. Las funciones de devolución de llamada suelen ser funciones cortas de una sola línea que solo se utilizan para esa operación. Los programadores suelen pedir un atajo para especificar este procesamiento adicional.
+
+#### Lambda: Funciones anónimas
+
+Utilice una lambda en lugar de crear la función. En nuestro ejemplo de ordenación anterior.
+
+``` python
+portfolio.sort(key=lambda s: s['name'])
+```
+
+Esto crea una función *sin nombre* que evalúa una *única* expresión. El código anterior es mucho más corto que el código inicial.
+
+``` python
+def stock_name(s):
+    return s['name']
+
+portfolio.sort(key=stock_name)
+
+# vs lambda
+portfolio.sort(key=lambda s: s['name'])
+```
+
+#### Uso de lambda
+
+-   Lambda está muy restringida.
+-   Solo se permite una única expresión.
+-   No se permiten declaraciones como `if`, `while`, etc.
+-   El uso más común es con funciones como `sort()`.
+
+#### Ejercicios
+
+Lea algunos datos de una cartera de acciones y conviértalos en una lista:
+
+``` python
+>>> import report
+>>> portfolio = list(report.read_portfolio('Data/portfolio.csv'))
+>>> for s in portfolio:
+        print(s)
+
+Stock('AA', 100, 32.2)
+Stock('IBM', 50, 91.1)
+Stock('CAT', 150, 83.44)
+Stock('MSFT', 200, 51.23)
+Stock('GE', 95, 40.37)
+Stock('MSFT', 50, 65.1)
+Stock('IBM', 100, 70.44)
+>>>
+```
+
+##### Ejercicio 7.5: Ordenar por un campo
+
+Pruebe las siguientes instrucciones que ordenan la cartera datos ordenados alfabéticamente por nombre de la acción.
+
+``` python
+>>> def stock_name(s):
+        return s.name
+
+>>> portfolio.sort(key=stock_name)
+>>> for s in portfolio:
+        print(s)
+
+... inspeccionar el resultado...
+>>>
+```
+
+En esta parte, la función `stock_name()` extrae el nombre de una acción de una sola entrada en la lista `portfolio`. `sort()` utiliza el resultado de esta función para hacer la comparación.
+
+##### Ejercicio 7.6: Ordenar por un campo con lambda
+
+Intenta ordenar la cartera según la cantidad de acciones usando una expresión `lambda`:
+
+``` python
+>>> portfolio.sort(key=lambda s: s.shares)
+>>> for s in portfolio:
+        print(s)
+
+... inspeccionar el resultado ...
+>>>
+```
+
+Intenta ordenar la cartera según el precio de cada acción
+
+``` python
+>>> portfolio.sort(key=lambda s: s.price)
+>>> for s in portfolio:
+        print(s)
+
+... inspeccionar el resultado ...
+>>>
+```
+
+Nota: `lambda` es un atajo útil porque te permite definir una función de procesamiento especial directamente en la llamada a `sort()` en lugar de tener que definir una función separada primero.
+
+[Contenido](../Contents.Rmd) \| [Anterior (7.1 Funciones con argumentos variables)](01_Variable_arguments.Rmd) \| [Próximo (7.3 Retornando Funciones y clousures)](03_Returning_functions.Rmd)

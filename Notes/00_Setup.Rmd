@@ -1,0 +1,103 @@
+---
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+## Configuración y descripción general del curso
+
+¡Bienvenido a Programación Practica de Python! Esta página contiene
+información importante sobre la configuración y la logística del curso.
+
+### Duración del curso y requisitos de tiempo
+
+Este curso se impartió originalmente como una capacitación presencial
+dirigida por un instructor que duró de 3 a 4 días. Para completar el
+curso en su totalidad, debe planificar un mínimo de 25 a 35 horas de
+trabajo. La mayoría de los participantes encuentran que el material es
+bastante desafiante sin echar un vistazo al código de la solución (ver a
+continuación).
+
+### Configuración e instalación de Python
+
+No necesita nada más que una instalación básica de Python 3.6 o
+posterior. No hay dependencia de ningún sistema operativo, editor, IDE o
+herramientas adicionales relacionadas con Python en particular. No hay
+dependencias de terceros.
+
+Dicho esto, la mayor parte de este curso implica aprender a escribir
+**scripts** y pequeños programas que involucran la lectura de datos de
+archivos. Por lo tanto, debe asegurarse de estar en un entorno en el que
+pueda trabajar fácilmente con archivos. Esto incluye el uso de un editor
+para crear programas Python y poder ejecutar esos programas desde el
+cmd/shell/terminal.
+
+-   IMPORTANTE: En adelante los términos `cmd`,`shell`,`terminal` se
+    utilizaran indeistintamente con el mismo significado.
+
+Es posible que te sientas inclinado a trabajar en este curso utilizando
+un entorno más interactivo, como Jupyter Notebooks. **¡NO LO
+RECOMIENDO!** Aunque los cuadernos son excelentes para la
+experimentación, muchos de los ejercicios de este curso enseñan
+conceptos relacionados con la organización de programas. Esto incluye
+trabajar con funciones, módulos, declaraciones de importación y
+refactorización de programas cuyo código fuente abarca varios archivos.
+En mi experiencia, es difícil replicar este tipo de entorno de trabajo
+en cuadernos.
+
+### Bifurcación/clonación del repositorio del curso
+
+Para preparar tu entorno para el curso, te recomiendo crear tu propia
+bifurcación del repositorio de GitHub del curso en
+<https://github.com/dabeaz-course/practical-python>. Una vez que hayas
+terminado, puedes clonarlo en tu máquina local:
+
+```         
+bash % git clone https://github.com/yourname/practical-python
+bash % cd practical-python
+bash %
+```
+
+Haz todo tu trabajo dentro del directorio `practical-python/`. Si envías
+el código de tu solución a tu bifurcación del repositorio, esto
+mantendrá todo tu código junto en un solo lugar y tendrás un buen
+registro histórico de tu trabajo cuando hayas terminado.
+
+Si no quieres crear una bifurcación personal o no tienes una cuenta de
+GitHub, aún puedes clonar el directorio del curso en tu máquina:
+
+```         
+bash % git clone https://github.com/dabeaz-course/practical-python```
+bash % cd practical-python```
+bash %
+```
+
+Con esta opción, no podrás confirmar cambios en el código excepto en la
+copia local en tu máquina.
+
+### Diseño del trabajo del curso
+
+Realiza todo tu trabajo de codificación en el directorio `Work/`. Dentro
+de ese directorio, hay un directorio `Data/`. El directorio `Data/`
+contiene una variedad de archivos de datos y otros scripts utilizados
+durante el curso. Con frecuencia tendrás que acceder a archivos ubicados
+en `Data/`. Los ejercicios del curso se escriben asumiendo que estás
+creando programas en el directorio `Work/`.
+
+### Orden del curso
+
+El material del curso debe completarse en el orden de las secciones,
+comenzando con la sección 1. Los ejercicios del curso en las secciones
+posteriores se basan en el código escrito en las secciones anteriores.
+Muchos de los ejercicios posteriores implican una refactorización menor
+del código existente.
+
+### Código de la solución
+
+El directorio `Solutions/` contiene el código de la solución completa
+para los ejercicios seleccionados. No dude en consultarlo si necesita
+una pista. Sin embargo, para aprovechar al máximo el curso, debe
+intentar crear sus propias soluciones primero.
+
+[Contenido](Contents.Rmd) \| [Próximo (1 Introducción a
+Python)](01_Introduction/00_Overview.Rmd)

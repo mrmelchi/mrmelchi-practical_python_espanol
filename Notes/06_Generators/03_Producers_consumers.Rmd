@@ -1,0 +1,286 @@
+---
+title: "03_Producers_consumers"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (6.2 Personalización de la iteración)](02_Customizing_iteration.Rmd) \| [Próximo (6.4 Expresiones generadoras)](04_More_generators.Rmd)
+
+### 6.3 Problemas y flujos de trabajo de productores y consumidores
+
+Los generadores son una herramienta útil para configurar varios tipos de problemas de productor/consumidor y las tuberías de flujo de datos. Esta sección trata sobre eso.
+
+#### Problemas de productor-consumidor
+
+Los generadores están estrechamente relacionados con varias formas de problemas de *productor-consumidor*.
+
+``` python
+# Productor
+def follow(f):
+    ...
+    while True:
+        ...
+        yield line        # Produce el valor en `line` a continuación
+        ...
+
+# Consumidor
+for line in follow(f):    # Consume el valor de `yield` arriba
+    ...
+```
+
+`yield` produce valores que `for` consume.
+
+#### Tuberias de generadores
+
+Puede utilizar este aspecto de los generadores para configurar tuberías de procesamiento (como las tuberías de Unix).
+
+*productor* =\> *procesamiento* =\> *procesamiento* =\> *consumidor*
+
+Las tuberías de procesamiento tienen un productor de datos inicial, un conjunto de etapas de procesamiento intermedias y un consumidor final.
+
+**productor** =\> *procesamiento* =\> *procesamiento* =\> *consumidor*
+
+``` python
+def productor():
+    ...
+    yield item
+    ...
+```
+
+El productor es normalmente un generador. Aunque también podría ser una lista de alguna otra secuencia. `yield` introduce datos en la tubería.
+
+*productor* =\> *procesamiento* =\> *procesamiento* =\> **consumidor**
+
+``` python
+def consumidor(s):
+    for item in s:
+        ...
+```
+
+El consumidor es un bucle `for`. Obtiene elementos y hace algo con ellos.
+
+*productor* =\> **procesamiento** =\> **procesamiento** =\> *consumidor*
+
+``` python
+def procesamiento(s):
+    for item in s:
+        ...
+        yield newitem
+...
+```
+
+Las etapas de procesamiento intermedias consumen y producen elementos simultáneamente. Pueden modificar el flujo de datos. También pueden filtrar (descartando elementos).
+
+*productor* =\> *procesamiento* =\> *procesamiento* =\> *consumer*
+
+``` python
+def productor():
+    ...
+    yield item # produce el elemento que recibe de `procesamiento`
+    ...
+
+def procesamiento(s):
+    for item in s: # Proviene del `productor`
+        ...
+        yield newitem # produce un nuevo elemento
+        ...
+
+def consumidor(s):
+    for item in s: # Proviene del `procesamiento`
+        ...
+```
+
+Código para configurar la canalización
+
+``` python
+a = productor()
+b = procesamiento(a)
+c = consumidor(b)
+```
+
+Notarás que los datos fluyen de manera incremental a través de las diferentes funciones.
+
+#### Ejercicios
+
+Para este ejercicio, el programa `stocksim.py` debe seguir ejecutándose en segundo plano. Vas a utilizar la función `follow()` que escribiste en el ejercicio anterior.
+
+##### Ejercicio 6.8: Configuración de una tubería simple
+
+Veamos la idea de la tubería en acción. Escriba la siguiente función:
+
+``` python
+>>> def filematch(lines, substr):
+...     for line in lines:
+...         if substr in line:
+...             yield line
+... 
+
+>>>
+```
+
+Esta función es casi exactamente la misma que el primer ejemplo de generador del ejercicio anterior, excepto que ya no abre un archivo, sino que simplemente opera sobre una secuencia de líneas que se le proporciona como argumento. Ahora, pruebe esto:
+
+```         
+>>> from follow import follow
+>>> lines = follow('Data/stocklog.csv')
+>>> ibm = filematch(lines, 'IBM')
+>>> for line in ibm:
+        print(line)
+
+... espere la salida ...
+```
+
+Puede que la salida tarde un poco en aparecer, pero con el tiempo debería ver algunas líneas que contienen datos de IBM.
+
+##### Ejercicio 6.9: Configuración de una secuencia de comandos más compleja
+
+Lleve la idea de la secuencia de comandos un poco más allá realizando más acciones.
+
+``` python
+>>> from follow import follow
+>>> import csv
+>>> lines = follow('Data/stocklog.csv')
+>>> rows = csv.reader(lines)
+>>> for row in rows:
+        print(row)
+
+['BA', '98.35', '6/11/2007', '09:41.07', '0.16', '98.25', '98.35', '98.31', '158148']
+['AA', '39.63', '6/11/2007', '09:41.07', '-0.03', '39.67', '39.63', '39.31', '270224']
+['XOM', '82.45', '6/11/2007', '09:41.07', '-0.23', '82.68', '82.64', '82.41', '748062']
+['PG', '62.95', '6/11/2007', '09:41.08', '-0.12', '62.80', '62.97', '62.61', '454327']
+```
+
+Bueno, eso es interesante. Lo que estás viendo aquí es que la salida de la función `follow()` se ha canalizado a la función `csv.reader()` y ahora estamos obteniendo una secuencia de filas divididas.
+
+##### Ejercicio 6.10: Creación de más componentes de tubería
+
+Extendamos toda la idea a una canalización más grande. En un archivo separado `ticker.py`, comience por crear una función que lea un archivo CSV como lo hizo anteriormente:
+
+``` python
+# ticker.py
+
+from follow import follow
+import csv
+
+def parse_stock_data(lines):
+    rows = csv.reader(lines)
+    return rows
+
+if __name__ == '__main__':
+    lines = follow('Data/stocklog.csv')
+    rows = parse_stock_data(lines)
+    for row in rows:
+        print(row)
+```
+
+Escriba una nueva función que seleccione columnas específicas:
+
+``` python
+# ticker.py
+...
+def select_columns(rows, indices):
+    for row in rows:
+        yield [row[index] for index in indices]
+...
+def parse_stock_data(lines):
+    rows = csv.reader(lines)
+    rows = select_columns(rows, [0, 1, 4])
+    return rows
+```
+
+Ejecute su programa nuevamente. Debería ver la salida acotada de esta manera:
+
+```         
+['BA', '98.35', '0.16']
+['AA', '39.63', '-0.03']
+['XOM', '82.45', '-0.23']
+['PG', '62.95', '-0.12']
+...
+```
+
+Escriba funciones generadoras que conviertan tipos de datos y creen diccionarios. Por ejemplo:
+
+``` python
+# ticker.py
+...
+
+def convert_types(rows, types):
+    for row in rows:
+        yield [func(val) for func, val in zip(types, row)]
+
+def make_dicts(rows, headers):
+    for row in rows:
+        yield dict(zip(headers, row))
+...
+def parse_stock_data(lines):
+    rows = csv.reader(lines)
+    rows = select_columns(rows, [0, 1, 4])
+    rows = convert_types(rows, [str, float, float])
+    rows = make_dicts(rows, ['name', 'price', 'change'])
+    return rows
+...
+```
+
+Ejecute su programa nuevamente. Ahora debería aparecer un flujo de diccionarios como este:
+
+```         
+{ 'name':'BA', 'price':98.35, 'change':0.16 }
+{ 'name':'AA', 'price':39.63, 'change':-0.03 }
+{ 'name':'XOM', 'price':82.45, 'change': -0.23 }
+{ 'name':'PG', 'price':62.95, 'change':-0.12 }
+...
+```
+
+##### Ejercicio 6.11: Filtrado de datos
+
+Escribe una función que filtre datos. Por ejemplo:
+
+``` python
+# ticker.py
+...
+
+def filter_symbols(rows, names):
+    for row in rows:
+        if row['name'] in names:
+            yield row
+```
+
+Use esto para filtrar acciones y seleccionar solo las que están en su cartera:
+
+``` python
+import report
+portfolio = report.read_portfolio('Data/portfolio.csv')
+rows = parse_stock_data(follow('Data/stocklog.csv'))
+rows = filter_symbols(rows, portfolio)
+for row in rows:
+    print(row)
+```
+
+##### Ejercicio 6.12: Poniéndolo todo junto
+
+En el programa `ticker.py`, escriba una función `ticker(portfile, logfile, fmt)` que cree un ticker de acciones en tiempo real a partir de una cartera, un archivo de registro y un formato de tabla determinados. Por ejemplo::
+
+``` python
+>>> from ticker import ticker
+>>> ticker('Data/portfolio.csv', 'Data/stocklog.csv', 'txt')
+      Name      Price     Change
+---------- ---------- ----------
+        GE      37.14      -0.18
+      MSFT      29.96      -0.09
+       CAT      78.03      -0.49
+        AA      39.34      -0.32
+...
+
+>>> ticker('Data/portfolio.csv', 'Data/stocklog.csv', 'csv')
+Name,Price,Change
+IBM,102.79,-0.28
+CAT,78.04,-0.48
+AA,39.35,-0.31
+CAT,78.05,-0.47
+...
+```
+
+#### Discusión
+
+Algunas lecciones aprendidas: Puede crear varias funciones generadoras y encadenarlas para realizar un procesamiento que involucre flujos de datos. Además, puede crear funciones que empaqueten una serie de etapas de flujos de datos en una única llamada a la función (por ejemplo, la función `parse_stock_data()`).
+
+[Contenido](../Contents.Rmd) \| [Anterior (6.2 Personalización de la iteración)](02_Customizing_iteration.Rmd) \| [Próximo (6.4 Expresiones generadoras)](04_More_generators.Rmd)

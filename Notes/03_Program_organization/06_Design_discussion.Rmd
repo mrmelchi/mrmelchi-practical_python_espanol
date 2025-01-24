@@ -1,0 +1,132 @@
+---
+title: "06_Design_discussion"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (3.5 Módulo principal)](05_Main_module.Rmd) \| [Siguiente (4. Classes and Objetos)](../04_Classes_objects/00_Overview.Rmd)
+
+### 3.6 Discusión sobre el diseño
+
+En esta sección reconsideramos una decisión de diseño tomada anteriormente.
+
+#### Nombres de archivo versus iterables
+
+Compare estos dos programas que devuelven el mismo resultado.
+
+``` python
+# Proporcione un nombre de archivo
+def read_data(filename):
+    records = []
+    with open(filename) as f:
+        for line in f:
+            ...
+            records.append(r)
+    return records
+
+d = read_data('file.csv')
+```
+
+``` python
+# Proporcione líneas
+def read_data(lines):
+    records = []
+    for line in lines:
+        ...
+        records.append(r)
+    return records
+
+with open('file.csv') as f:
+    d = read_data(f)
+```
+
+-   ¿Cuál de estas funciones prefiere? ¿Por qué?
+-   ¿Cuál de estas funciones es más flexible?
+
+#### Idea profunda: "Duck Typing"
+
+[Duck Typing](https://en.wikipedia.org/wiki/Duck_typing) es un concepto de programación informática para determinar si un objeto se puede usar para un propósito particular. Es una aplicación de la [prueba del pato] <https://en.wikipedia.org/wiki/Duck_test>).
+
+> Si parece un pato, nada como un pato y grazna como un pato, entonces probablemente sea un pato.
+
+En la segunda versión de `read_data()` anterior, la función espera cualquier objeto iterable. No solo las líneas de un archivo.
+
+``` python
+def read_data(lines):
+    records = []
+    for line in lines:
+        ...
+        records.append(r)
+    return records
+```
+
+Esto significa que podemos usarlo con otras *líneas*.
+
+``` python
+# Un archivo CSV
+lines = open('data.csv')
+data = read_data(lines)
+
+# Un archivo comprimido
+lines = gzip.open('data.csv.gz','rt')
+data = read_data(lines)
+
+# La entrada estándar
+lines = sys.stdin
+data = read_data(lines)
+
+# Una lista de cadenas
+lines = ['ACME,50,91.1','IBM,75,123.45', ... ]
+data = read_data(lines)
+```
+
+Este diseño ofrece una flexibilidad considerable.
+
+*Pregunta: ¿Deberíamos adoptar o luchar contra esta flexibilidad?*
+
+#### Mejores prácticas de diseño de bibliotecas
+
+Las bibliotecas de código suelen funcionar mejor si adoptan la flexibilidad. No restrinja sus opciones. Una gran flexibilidad conlleva un gran poder.
+
+#### Ejercicio
+
+##### Ejercicio 3.17: De nombres de archivo a objetos similares a archivos
+
+Ahora ha creado un archivo `fileparse.py` que contenía una función `parse_csv()`. La función funcionaba de la siguiente manera:
+
+``` python
+>>> import fileparse
+>>> portfolio = fileparse.parse_csv('Data/portfolio.csv', types=str,int,float])
+>>>
+```
+
+En este momento, la función espera que se le pase un nombre de archivo. Sin embargo, puede hacer que el código sea más flexible. Modifique la función para que funcione con cualquier objeto iterable o similar a un archivo. Por ejemplo:
+
+``` python
+>>> import fileparse
+>>> import gzip
+>>> with gzip.open('Data/portfolio.csv.gz', 'rt') as file:
+...      port = fileparse.parse_csv(file, types=[str,int,float])
+...
+>>> lines = ['name,shares,price', 'AA,100,34.23', 'IBM,50,91.1', 'HPE,75,45.1']
+>>> port = fileparse.parse_csv(lines, types=[str,int,float])
+>>>
+```
+
+En este nuevo código, ¿qué sucede si pasa un nombre de archivo como antes?
+
+```         
+>>> port = fileparse.parse_csv('Data/portfolio.csv', types=[str,int,float])
+>>> port
+... mira la salida (debería ser una locura) ...
+>>>
+```
+
+Sí, tendrás que tener cuidado. ¿Podrías agregar una comprobación de seguridad para evitar esto?
+
+##### Ejercicio 3.18: Corregir funciones existentes
+
+Corrige las funciones `read_portfolio()` y `read_prices()` en el archivo `report.py` para que funcionen con la versión modificada de `parse_csv()`. Esto solo debería implicar una modificación menor. Después, tus programas `report.py` y `pcost.py` deberían funcionar de la misma manera que siempre lo hicieron.
+
+[Contenido](../Contenido.Rmd) \| [Anterior (3.5 Módulo principal)](05_Main_module.Rmd) \| [Siguiente (4. Classes and Objetos)](../04_Classes_objects/00_Overview.Rmd)

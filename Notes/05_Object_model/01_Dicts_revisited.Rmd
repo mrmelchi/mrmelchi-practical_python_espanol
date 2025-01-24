@@ -1,0 +1,601 @@
+---
+title: "01_Dicts_revisited"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (4.4 Definición de excepciones)](../04_Classes_objects/04_Defining_exceptions.Rmd) \| [Próximo (5.2 Técnicas de encapsulación)](02_Classes_encapsulation.Rmd)
+
+### 5.1 Revisión de diccionarios
+
+El sistema de objetos de Python se basa en gran medida en una implementación que involucra diccionarios. Esta sección trata sobre eso.
+
+#### Diccionarios revisitados
+
+Recuerde que un diccionario es una colección de valores nombrados.
+
+``` python
+stock = {
+    'name' : 'GOOG',
+    'shares' : 100,
+    'price' : 490.1
+}
+```
+
+Los diccionarios se usan comúnmente para estructuras de datos simples. Sin embargo, se usan para partes críticas del intérprete y pueden ser el *tipo de datos más importante en Python*.
+
+#### Diccionarios y módulos
+
+Dentro de un módulo, un diccionario contiene todas las variables y funciones globales.
+
+``` python
+# foo.py
+
+x = 42
+def bar():
+    ...
+
+def spam():
+    ...
+```
+
+Si inspecciona `foo.__dict__` o `globals()`, verá el diccionario.
+
+``` python
+{
+    'x' : 42,
+    'bar' : <function bar>,
+    'spam' : <function spam>
+}
+```
+
+#### Diccionarios y objetos
+
+Los objetos definidos por el usuario también usan diccionarios tanto para los datos de instancia como para las clases. De hecho, todo el sistema de objetos es principalmente una capa adicional que se coloca sobre los diccionarios.
+
+Un diccionario contiene los datos de instancia, `__dict__`.
+
+``` python
+>>> s = Stock('GOOG', 100, 490.1)
+>>> s.__dict__
+{'name' : 'GOOG', 'shares' : 100, 'price': 490.1 }
+```
+
+Este diccionario (y la instancia) se rellenan al asignar a `self`.
+
+``` python
+class Stock:
+    def __init__(self, name, shares, price):
+        self.name = name
+        self.shares = shares
+        self.price = price
+```
+
+Los datos de la instancia, `self.__dict__`, tienen este aspecto:
+
+``` python
+{
+    'name': 'GOOG',
+    'shares': 100,
+    'price': 490.1
+}
+```
+
+**Cada instancia obtiene su propio diccionario privado.**
+
+``` python
+s = Stock('GOOG', 100, 490.1) # {'name' : 'GOOG','shares' : 100, 'price': 490.1 }
+t = Stock('AAPL', 50, 123.45) # {'name' : 'AAPL','shares' : 50, 'price': 123.45 }
+```
+
+Si creaste 100 instancias de alguna clase, hay 100 diccionarios que contienen datos.
+
+#### Miembros de clase
+
+Un diccionario separado también contiene los métodos.
+
+``` python
+class Stock:
+    def __init__(self, name, shares, price):
+        self.name = name
+        self.shares = shares
+        self.price = price
+
+    def cost(self):
+        return self.shares * self.price
+
+    def sell(self, nshares):
+        self.shares -= nshares
+```
+
+El diccionario está en `Stock.__dict__`.
+
+``` python
+{
+    'cost': <function>,
+    'sell': <function>,
+    '__init__': <function>
+}
+```
+
+#### Instancias y clases
+
+Las instancias y las clases están vinculadas entre sí. El atributo `__class__` hace referencia a la clase.
+
+``` python
+>>> s = Stock('GOOG', 100, 490.1)
+>>> s.__dict__
+{ 'name': 'GOOG', 'shares': 100, 'price': 490.1 }
+>>> s.__class__
+<class '__main__.Stock'>
+>>>
+```
+
+El diccionario de instancias contiene datos exclusivos de cada instancia, mientras que el diccionario de clases contiene datos compartidos colectivamente por *todas* las instancias.
+
+#### Acceso a atributos
+
+Cuando trabaja con objetos, accede a los datos y métodos utilizando el operador `.`.
+
+``` python
+x = obj.name # Obtención
+obj.name = value # Configuración
+del obj.name # Eliminación
+```
+
+Estas operaciones están directamente vinculadas a los diccionarios que se encuentran debajo de las sábanas.
+
+#### Modificación de instancias
+
+Las operaciones que modifican un objeto actualizan el diccionario subyacente.
+
+``` python
+>>> s = Stock('GOOG', 100, 490.1)
+>>> s.__dict__
+{ 'nombre': 'GOOG', 'acciones': 100, 'precio': 490.1 }
+>>> s.shares = 50 # Configuración
+>>> s.date = '6/7/2007' # Configuración
+>>> s.__dict__
+{ 'nombre': 'GOOG', 'acciones': 50, 'precio': 490.1, 'fecha': '6/7/2007' }
+>>> del s.shares # Eliminando
+>>> s.__dict__
+{ 'nombre': 'GOOG', 'precio': 490.1, 'fecha': '6/7/2007' }
+>>>
+```
+
+#### Lectura de atributos
+
+Supongamos que lee un atributo en una instancia.
+
+``` python
+x = obj.name
+```
+
+El atributo puede existir en dos lugares:
+
+-   Diccionario de instancia local.
+-   Diccionario de clase.
+
+Se deben verificar ambos diccionarios. Primero, verifique en `__dict__` local. Si no se encuentra, busque en `__dict__` de la clase hasta `__class__`.
+
+``` python
+>>> s = Stock(...)
+>>> s.name
+'GOOG'
+>>> s.cost()
+49010.0
+>>>
+```
+
+Este esquema de búsqueda es la forma en que los miembros de una *clase* se comparten entre todas las instancias.
+
+#### Cómo funciona la herencia
+
+Las clases pueden heredar de otras clases.
+
+``` python
+class A(B, C):
+    ...
+```
+
+Las clases base se almacenan en una tupla en cada clase.
+
+``` python
+>>> A.__bases__
+(<class '__main__.B'>, <class '__main__.C'>)
+>>>
+```
+
+Esto proporciona un enlace a las clases padre.
+
+#### Lectura de atributos con herencia
+
+Lógicamente, el proceso para encontrar un atributo es el siguiente. Primero, verifique en `__dict__` local. Si no lo encuentra, busque en `__dict__` de la clase. Si no lo encuentra en la clase, busque en las clases base a través de `__bases__`. Sin embargo, hay algunos aspectos sutiles de esto que se analizan a continuación.
+
+#### Lectura de atributos con herencia única
+
+En las jerarquías de herencia, los atributos se encuentran recorriendo el árbol de herencia en orden.
+
+``` python
+class A: pass
+class B(A): pass
+class C(A): pass
+class D(B): pass
+class E(D): pass
+```
+
+Con herencia simple, hay una única ruta hacia la cima. Se detiene en la primera coincidencia.
+
+#### Orden de resolución de métodos o MRO
+
+Python precalcula una cadena de herencia y la almacena en el atributo *MRO* de la clase. Puede verla.
+
+``` python
+>>> E.__mro__
+(<class '__main__.E'>, <class '__main__.D'>, <class '__main__.B'>, <class '__main__.A'>, <class 'object'>)
+>>>
+```
+
+Esta cadena se denomina **Orden de resolución de métodos**. Para encontrar un atributo, Python recorre el MRO en orden. La primera coincidencia gana.
+
+#### MRO en herencia múltiple
+
+Con la herencia múltiple, no hay una única ruta hacia la cima. Veamos un ejemplo.
+
+``` python
+class A: pass
+class B: pass
+class C(A, B): pass
+class D(B): pass
+class E(C, D): pass
+```
+
+¿Qué sucede cuando se accede a un atributo?
+
+``` python
+e = E()
+e.attr
+```
+
+Se lleva a cabo un proceso de búsqueda de atributos, pero ¿cuál es el orden? Eso es un problema.
+
+Python utiliza *herencia múltiple cooperativa* que obedece algunas reglas sobre el orden de las clases.
+
+-   Los hijos siempre se comprueban antes que los padres
+-   Los padres (si son múltiples) siempre se comprueban en el orden indicado.
+
+El MRO se calcula ordenando todas las clases en una jerarquía de acuerdo con esas reglas.
+
+``` python
+>>> E.__mro__
+(
+<class 'E'>,
+<class 'C'>,
+<class 'A'>,
+<class 'D'>,
+<class 'B'>,
+<class 'object'>)
+>>>
+```
+
+El algoritmo subyacente se llama "Algoritmo de linealización C3". Los detalles precisos no son importantes siempre que recuerde que una jerarquía de clases obedece las mismas reglas de ordenamiento que podría seguir si su casa se incendiara y tuviera que evacuar: primero los niños, luego los padres.
+
+#### Una reutilización de código extraña (que implica herencia múltiple)
+
+Considere dos objetos completamente no relacionados:
+
+``` python
+class Dog:    # Perro
+    def noise(self): # ruido
+        return 'Bark'   # Ladrar
+
+    def chase(self):
+        return 'Chasing!'   # Persiguiendo
+
+class LoudDog(Dog): # Perro ruidoso
+    def noise(self):
+        # Código común con LoudBike (abajo)
+        return super().noise().upper()
+```
+
+Y
+
+``` python
+class Bike:
+    def noise(self):
+        return 'On Your Left'
+
+    def pedal(self):
+        return 'Pedaling!'
+
+class LoudBike(Bike):
+    def noise(self):
+        # Código común con LoudDog (arriba)
+        return super().noise().upper()
+```
+
+Hay un código común en la implementación de `LoudDog.noise()` y `LoudBike.noise()`. De hecho, el código es exactamente el mismo. Naturalmente, código como ese está destinado a atraer a los ingenieros de software.
+
+#### El patrón "Mixin"
+
+El patrón *Mixin* es una clase con un fragmento de código.
+
+``` python
+class Loud:
+    def noise(self):
+        return super().noise().upper()
+```
+
+Esta clase no se puede usar de forma aislada. Se mezcla con otras clases a través de la herencia.
+
+``` python
+class LoudDog(Loud, Dog):
+    pass
+
+class LoudBike(Loud, Bike):
+    pass
+```
+
+Milagrosamente, la sonoridad ahora se implementó solo una vez y se reutilizó en dos clases completamente no relacionadas. Este tipo de truco es uno de los usos principales de la herencia múltiple en Python.
+
+#### Por qué `super()`
+
+Siempre use `super()` al anular métodos.
+
+``` python
+class Loud:
+    def noise(self):
+        return super().noise().upper()
+```
+
+`super()` delega a la *próxima clase* en el MRO.
+
+La parte complicada es que no sabe qué es. En particular, no sabe qué es si se utiliza la herencia múltiple.
+
+#### Algunas precauciones
+
+La herencia múltiple es una herramienta poderosa. Recuerde que el poder conlleva responsabilidad. Los marcos de trabajo y las bibliotecas a veces la utilizan para funciones avanzadas que implican la composición de componentes. Ahora, olvídese de que vio eso.
+
+#### Ejercicios
+
+En la Sección 4, definió una clase `Stock` que representaba una tenencia de acciones. En este ejercicio, utilizaremos esa clase. Reinicie el intérprete y cree algunas instancias:
+
+``` python
+>>> ================================= RESTART ==================================
+>>> from stock import Stock
+>>> goog = Stock('GOOG',100,490.10)
+>>> ibm = Stock('IBM',50, 91.23)
+>>>
+```
+
+##### Ejercicio 5.1: Representación de instancias
+
+En el modo interactivo, inspeccione los diccionarios subyacentes de las dos instancias que creó:
+
+``` python
+>>> goog.__dict__
+... observe la salida ...
+>>> ibm.__dict__
+... observe la salida ...
+>>>
+```
+
+##### Ejercicio 5.2: Modificación de datos de instancia
+
+Intente configurar un nuevo atributo en una de las instancias anteriores:
+
+``` python
+>>> goog.date = '6/11/2007'
+>>> goog.__dict__
+... observe el resultado ...
+>>> ibm.__dict__
+... observe el resultado ...
+>>>
+```
+
+En el resultado anterior, notará que la instancia `goog` tiene un atributo `date` mientras que la instancia `ibm` no lo tiene. Es importante notar que Python realmente no impone ninguna restricción sobre los atributos. Por ejemplo, los atributos de una instancia no están limitados a los configurados en el método `__init__()`.
+
+En lugar de establecer un atributo, intente colocar un nuevo valor directamente en el objeto `__dict__`:
+
+``` python
+>>> goog.__dict__['time'] = '9:45am'
+>>> goog.time
+'9:45am'
+>>>
+```
+
+Aquí, realmente se nota el hecho de que una instancia es solo la parte superior de un diccionario. Nota: se debe enfatizar que la manipulación directa del diccionario es poco común; siempre debe escribir su código para usar la sintaxis (.).
+
+##### Ejercicio 5.3: El rol de las clases
+
+Las definiciones que componen una definición de clase son compartidas por todas las instancias de esa clase. Tenga en cuenta que todas las instancias tienen un enlace a su clase asociada:
+
+``` python
+>>> goog.__class__
+... observe la salida ...
+>>> ibm.__class__
+... observe la salida ...
+>>>
+```
+
+Intente llamar a un método en las instancias:
+
+``` python
+>>> goog.cost()
+49010.0
+>>> ibm.cost()
+4561.5
+>>>
+```
+
+Observe que el nombre 'cost' no está definido ni en `goog.__dict__` ni en `ibm.__dict__`. En cambio, lo proporciona el diccionario de clases. Pruebe esto:
+
+``` python
+>>> Stock.__dict__['cost']
+... observe la salida...
+>>>
+```
+
+Intente llamar al método `cost()` directamente a través del diccionario:
+
+``` python
+>>> Stock.__dict__['cost'](goog)
+49010.0
+>>> Stock.__dict__['cost'](ibm)
+4561.5
+>>>
+```
+
+Observe cómo está llamando a la función definida en la definición de clase y cómo el argumento `self` obtiene la instancia.
+
+Intenta agregar un nuevo atributo a la clase `Stock`:
+
+``` python
+>>> Stock.foo = 42
+>>>
+```
+
+Observa cómo este nuevo atributo ahora aparece en todas las instancias:
+
+``` python
+>>> goog.foo
+42
+>>> ibm.foo
+42
+>>>
+```
+
+Sin embargo, observa que no es parte del diccionario de la instancia:
+
+``` python
+>>> goog.__dict__
+... observa la salida y observa que no hay ningún atributo 'foo' ...
+>>>
+```
+
+La razón por la que puedes acceder al atributo `foo` en las instancias es que Python siempre verifica el diccionario de clase si no puede encontrar algo en la instancia misma.
+
+Nota: Esta parte del ejercicio ilustra algo conocido como variable de clase. Supongamos, por ejemplo, que tiene una clase como esta:
+
+``` python
+class Foo:
+    a = 13 # Variable de clase
+    def __init__(self,b):
+        self.b = b # Variable de instancia
+```
+
+En esta clase, la variable `a`, asignada en el cuerpo de la clase misma, es una "variable de clase". Es compartida por todas las instancias que se crean. Por ejemplo:
+
+``` python
+>>> f = Foo(10)
+>>> g = Foo(20)
+>>> f.a # Inspeccionar la variable de clase (igual para ambas instancias)
+13
+>>> g.a
+13
+>>> f.b # Inspeccionar la variable de instancia (difiere)
+10
+>>> g.b
+20
+>>> Foo.a = 42 # Cambiar el valor de la variable de clase
+>>> f.a
+42
+>>> g.a
+42
+>>>
+```
+
+##### Ejercicio 5.4: Métodos enlazados
+
+Una característica sutil de Python es que invocar un método en realidad implica dos pasos y algo conocido como método enlazado. Por ejemplo:
+
+``` python
+>>> s = goog.sell
+>>> s
+<bound method Stock.sell of Stock('GOOG', 100, 490.1)>
+>>> s(25)
+>>> goog.shares
+75
+>>>
+```
+
+Los métodos enlazados en realidad contienen todas las piezas necesarias para llamar a un método. Por ejemplo, mantienen un registro de la función que implementa el método:
+
+``` python
+>>> s.__func__
+<function sell at 0x10049af50>
+>>>
+```
+
+Este es el mismo valor que se encuentra en el diccionario `Stock`.
+
+``` python
+>>> Stock.__dict__['sell']
+<function sell at 0x10049af50>
+>>>
+```
+
+Los métodos enlazados también registran la instancia, que es el argumento `self`.
+
+``` python
+>>> s.__self__
+Stock('GOOG',75,490.1)
+>>>
+```
+
+Cuando invocas la función usando `()` todas las piezas se unen. Por ejemplo, llamar a `s(25)` en realidad hace esto:
+
+``` python
+>>> s.__func__(s.__self__, 25) # Igual que s(25)
+>>> goog.shares
+50
+>>>
+```
+
+##### Ejercicio 5.5: Herencia
+
+Crea una nueva clase que herede de `Stock`.
+
+```         
+>>> class NewStock(Stock):
+    def yow(self):
+        print('Yow!')
+
+>>> n = NewStock('ACME', 50, 123.45)
+>>> n.cost()
+6172.50
+>>> n.yow()
+Yow!
+>>>
+```
+
+La herencia se implementa extendiendo el proceso de búsqueda de atributos. El atributo `__bases__` tiene una tupla de los padres inmediatos:
+
+``` python
+>>> NewStock.__bases__
+(<class 'stock.Stock'>,)
+>>>
+```
+
+El atributo `__mro__` tiene una tupla de todos los padres, en el orden en que se buscarán los atributos.
+
+``` python
+>>> NewStock.__mro__
+(<class '__main__.NewStock'>, <class 'stock.Stock'>, <class 'object'>)
+>>>
+```
+
+Así es como se encontraría el método `cost()` de la instancia `n` anterior:
+
+``` python
+>>> for cls in n.__class__.__mro__:
+        if 'cost' in cls.__dict__:
+            break
+
+>>> cls
+<class '__main__.Stock'>
+>>> cls.__dict__['cost']
+<function cost at 0x101aed598>
+>>>
+```
+
+[Contenido](../Contents.Rmd) \| [Anterior (4.4 Definición de excepciones)](../04_Classes_objects/04_Defining_exceptions.Rmd) \| [Próximo (5.2 Técnicas de encapsulación)](02_Classes_encapsulation.Rmd)

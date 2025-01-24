@@ -1,0 +1,19 @@
+---
+title: "00_Overview"
+output: html_document
+---
+
+[Contenido](../Contents.md) \| [Anterior (2. Trabajar con datos)](../02_Working_with_data/00_Overview.md) \| [Próximo (4. Classes and Objetos)](../04_Classes_objects/00_Overview.md)
+
+## Organización del programa
+
+Hasta ahora, hemos aprendido algunos conceptos básicos de Python y hemos escrito algunos scripts cortos. Sin embargo, a medida que comiences a escribir programas más grandes, querrás organizarte. Esta sección profundiza en mayor detalle sobre la escritura de funciones, el manejo de errores y presenta módulos. Al final deberías poder escribir programas que se subdividan en funciones en varios archivos. También proporcionaremos algunas plantillas de código útiles para escribir scripts más útiles.
+
+-   [3.1 Funciones y escritura de scripts](01_Script.md)
+-   [3.2 Más detalles sobre las funciones](02_More_functions.md)
+-   [3.3 Comprobación de errores](03_Error_checking.md)
+-   [3.4 Módulos](04_Modules.md)
+-   [3.5 Módulo principal](05_Main_module.md)
+-   [3.6 Discusión sobre el diseño](06_Design_discussion.md)
+
+[Contents](../Contents.md) \| [Prev (2 Working With Data)](../02_Working_with_data/00_Overview.md) \| [Next (4 Classes and Objects)](../04_Classes_objects/00_Overview.md)

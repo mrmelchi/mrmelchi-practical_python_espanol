@@ -1,0 +1,553 @@
+---
+title: "02_Inheritance"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (4.1 Clases)](01_Class.Rmd) \| [Próximo (4.3 Métodos especiales)](03_Special_methods.Rmd)
+
+### 4.2 Herencia
+
+La herencia es una herramienta que se utiliza habitualmente para escribir programas extensibles. Esta sección explora esa idea.
+
+#### Introducción
+
+La herencia se utiliza para especializar objetos existentes:
+
+``` python
+class Parent:
+...
+
+class Child(Parent):
+...
+```
+
+La nueva clase `Child` se denomina clase derivada o subclase. La clase `Parent` se conoce como clase base o superclase. `Parent` se especifica en `()` después del nombre de la clase, `class Child(Parent):`.
+
+#### Extención
+
+Con la herencia, tomas una clase existente y:
+
+-   Agregas nuevos métodos
+-   Redefines algunos de los métodos existentes
+-   Agregas nuevos atributos a las instancias
+
+Al final, **extiendes el código existente**.
+
+#### Ejemplo
+
+Supón que esta es tu clase inicial:
+
+``` python
+class Stock:
+    def __init__(self, name, shares, price):
+        self.name = name
+        self.shares = shares
+        self.price = price
+
+    def cost(self):
+        return self.shares * self.price
+
+    def sell(self, nshares):
+        self.shares -= nshares
+```
+
+Puedes cambiar cualquier parte de esto mediante la herencia.
+
+#### Agrega un nuevo método
+
+``` python
+class MyStock(Stock):
+    def panic(self):
+        self.sell(self.shares)
+```
+
+Ejemplo de uso.
+
+``` python
+>>> s = MyStock('GOOG', 100, 490.1)
+>>> s.sell(25)
+>>> s.shares
+75
+>>> s.panic()
+>>> s.shares
+0
+>>>
+```
+
+#### Redefinición de un método existente
+
+``` python
+class MyStock(Stock):
+    def cost(self):
+        return 1.25 * self.shares * self.price
+```
+
+Ejemplo de uso.
+
+``` python
+>>> s = MyStock('GOOG', 100, 490.1)
+>>> s.cost()
+61262.5
+>>>
+```
+
+El nuevo método reemplaza al anterior. Los otros métodos no se ven afectados. Es fantástico.
+
+#### Sobreescritura
+
+A veces, una clase extiende un método existente, pero desea utilizar la implementación original dentro de la redefinición. Para ello, utilice `super()`:
+
+``` python
+class Stock:
+    ...
+    def cost(self):
+        return self.shares * self.price
+    ...
+
+class MyStock(Stock):
+    def cost(self):
+    # Verifique la llamada a `super`
+        actual_cost = super().cost()
+        return 1.25 * actual_cost
+```
+
+Use `super()` para llamar a la versión anterior.
+
+*Precaución: En Python 2, la sintaxis era más detallada.*
+
+``` python
+actual_cost = super(MyStock, self).cost()
+```
+
+#### `__init__` y herencia
+
+Si se redefine `__init__`, es esencial inicializar el padre.
+
+``` python
+class Stock:
+    def __init__(self, name, shares, price):
+        self.name = name
+        self.shares = shares
+        self.price = price
+
+class MyStock(Stock):
+    def __init__(self, name, shares, price, factor):
+    # Verifica la llamada a `super` y `__init__`
+        super().__init__(name, shares, price)
+        self.factor = factor
+
+    def cost(self):
+        return self.factor * super().cost()
+```
+
+Debes llamar al método `__init__()` en `super`, que es la forma de llamar a la versión anterior como se mostró anteriormente.
+
+#### Uso de herencia
+
+La herencia se usa a veces para organizar objetos relacionados.
+
+``` python
+class Shape:
+...
+
+class Circle(Shape):
+...
+
+class Rectangle(Shape):
+...
+```
+
+Piensa en una jerarquía lógica o taxonomía. Sin embargo, un uso más común (y práctico) está relacionado con la creación de código reutilizable o extensible. Por ejemplo, un marco de trabajo puede definir una clase base y darte instrucciones para personalizarla.
+
+``` python
+class CustomHandler(TCPHandler):
+    def handle_request(self):
+    ...
+    # Procesamiento personalizado
+```
+
+La clase base contiene código de propósito general. Tu clase hereda y personaliza partes específicas.
+
+#### Relación "es una"
+
+La herencia establece una relación de tipos.
+
+``` python
+class Shape:
+...
+
+class Circle(Shape):
+...
+```
+
+Comprueba si hay una instancia de objeto.
+
+``` python
+>>> c = Circle(4.0)
+>>> isinstance(c, Shape)
+True
+>>>
+```
+
+*Importante: idealmente, cualquier código que haya funcionado con instancias de la clase padre también funcionará con instancias de la clase hija.*
+
+#### Clase base `object`
+
+Si una clase no tiene padre, a veces verás que `object` se usa como base.
+
+``` python
+class Shape(object):
+...
+```
+
+`object` es el padre de todos los objetos en Python.
+
+\*Nota: técnicamente no es obligatorio, pero a menudo lo ves especificado como un remanente de su uso obligatorio en Python 2. Si se omite, la clase aún hereda implícitamente de `object`.
+
+#### Herencia múltiple
+
+Puedes heredar de varias clases especificándolas en la definición de la clase.
+
+``` python
+class Mother:
+...
+
+class Father:
+...
+
+class Child(Mother, Father):
+...
+```
+
+La clase `Child` hereda características de ambos padres. Hay algunos detalles un poco complicados. No lo hagas a menos que sepas lo que estás haciendo. Se dará más información en la siguiente sección, pero no vamos a utilizar más la herencia múltiple en este curso.
+
+#### Ejercicios
+
+Un uso importante de la herencia es escribir código que se puede ampliar o personalizar de varias maneras, especialmente en bibliotecas o marcos. Para ilustrarlo, considere la función `print_report()` en su programa `report.py`. Debería verse algo como esto:
+
+``` python
+def print_report(reportdata):
+    '''
+    Imprima una tabla con un formato agradable a partir de una lista de         tuplas (name, shares, price, change).
+    '''
+    headers = ('Name','Shares','Price','Change')
+    print('%10s %10s %10s %10s' % headers)
+    print(('-'*10 + ' ')*len(headers))
+    for row in reportdata:
+        print('%10s %10d %10.2f %10.2f' % row)
+```
+
+Cuando ejecute su programa de informe, debería obtener un resultado como este:
+
+```         
+>>> import report
+>>> report.portfolio_report('Data/portfolio.csv', 'Data/prices.csv')
+      Name     Shares      Price     Change
+---------- ---------- ---------- ----------
+        AA        100       9.22     -22.98
+       IBM         50     106.28      15.18
+       CAT        150      35.46     -47.98
+      MSFT        200      20.89     -30.34
+        GE         95      13.48     -26.89
+      MSFT         50      20.89     -44.21
+       IBM        100     106.28      35.84
+```
+
+##### Ejercicio 4.5: Un problema de extensibilidad
+
+Supongamos que desea modificar la función `print_report()` para que admita una variedad de formatos de salida diferentes, como texto sin formato, HTML, CSV o XML. Para ello, podría intentar escribir una función gigantesca que hiciera todo. Sin embargo, hacerlo probablemente conduciría a un desastre imposible de mantener. En cambio, esta es una oportunidad perfecta para utilizar la herencia.
+
+Para comenzar, concéntrese en los pasos que intervienen en la creación de una tabla. En la parte superior de la tabla hay un conjunto de encabezados de tabla. Después de eso, aparecen las filas de datos de la tabla. Tomemos esos pasos y pongámoslos en su propia clase. Cree un archivo llamado `tableformat.py` y defina la siguiente clase:
+
+``` python
+# tableformat.py
+
+class TableFormatter:
+    def headers(self, headers):
+    '''
+    Emite los encabezados de la tabla.
+    '''
+    raise NotImplementedError()
+
+    def row(self, rowdata):
+    '''
+    Emite una sola fila de datos de la tabla.
+    '''
+    raise NotImplementedError()
+```
+
+Esta clase no hace nada, pero sirve como una especie de especificación de diseño para clases adicionales que se definirán en breve. A una clase como esta a veces se la llama "clase base abstracta".
+
+Modifique la función `print_report()` para que acepte un objeto `TableFormatter` como entrada e invoque métodos en él para producir la salida. Por ejemplo, de esta manera:
+
+``` python
+# report.py
+...
+
+def print_report(reportdata, formatter):
+    '''
+    Imprime una tabla con un formato agradable a partir de una lista de tuplas (name, shares, price, change).
+    '''
+    formatter.headings(['Name','Shares','Price','Change'])
+    for name, shares, price, change in reportdata:
+        rowdata = [ name, str(shares), f'{price:0.2f}', f'{change:0.2f}' ]
+        formatter.row(rowdata)
+```
+
+Dado que agregaste un argumento a print_report(), también necesitarás modificar la función portfolio_report()`. Cámbielo para que cree un`TableFormatter\` como este:
+
+``` python
+# report.py
+
+import tableformat
+
+...
+def portfolio_report(portfoliofile, pricefile):
+    '''
+    Cree un informe de acciones a partir de los archivos de datos de cartera y precios.
+    '''
+    # Leer archivos de datos
+    portfolio = read_portfolio(portfoliofile)
+    prices = read_prices(pricefile)
+
+    # Crear los datos del informe
+    report = make_report_data(portfolio, prices)
+
+    # Imprimirlo
+    formatter = tableformat.TableFormatter()
+    print_report(report, formatter)
+```
+
+Ejecutar este nuevo código:
+
+``` python
+>>> ================================== RESTART ==================================
+>>> import report
+>>> report.portfolio_report('Data/portfolio.csv', 'Data/prices.csv')
+... se bloquea ...
+```
+
+Debería bloquearse inmediatamente con una excepción `NotImplementedError`. No es muy interesante, pero es exactamente lo que esperábamos. Continúe con la siguiente parte.
+
+##### Ejercicio 4.6: Uso de la herencia para producir resultados diferentes
+
+La clase `TableFormatter` que definió en la parte (a) está pensada para extenderse mediante herencia. De hecho, esa es la idea. Para ilustrarlo, defina una clase `TextTableFormatter` de la siguiente manera:
+
+``` python
+# tableformat.py
+...
+class TextTableFormatter(TableFormatter):
+    '''
+    Emite una tabla en formato de texto simple
+    '''
+    def headers(self, headers):
+        for h in headers:
+              print(f'{h:>10s}', end=' ')
+        print()
+        print(('-'*10 + ' ')*len(headers))
+
+    def row(self, rowdata):
+        for d in rowdata:
+            print(f'{d:>10s}', end=' ')
+        print()
+```
+
+Modifique la función `portfolio_report()` de esta manera y pruébela:
+
+``` python
+# report.py
+...
+def portfolio_report(portfoliofile, pricefile):
+    '''
+    Genere un informe de acciones a partir de los archivos de datos de cartera y precios.
+    '''
+    # Leer archivos de datos
+    portfolio = read_portfolio(portfoliofile)
+    prices = read_prices(pricefile)
+    
+    # Crear los datos del informe
+    report = make_report_data(portfolio, prices)
+    
+    # Imprimirlo
+    formatter = tableformat.TextTableFormatter()
+    print_report(report, formatter)
+```
+
+Esto debería producir el mismo resultado que antes:
+
+``` python
+>>> ================================ RESTART ================================
+>>> import report
+>>> report.portfolio_report('Data/portfolio.csv', 'Data/prices.csv')
+      Name     Shares      Price     Change
+---------- ---------- ---------- ----------
+        AA        100       9.22     -22.98
+       IBM         50     106.28      15.18
+       CAT        150      35.46     -47.98
+      MSFT        200      20.89     -30.34
+        GE         95      13.48     -26.89
+      MSFT         50      20.89     -44.21
+       IBM        100     106.28      35.84
+>>>
+```
+
+Sin embargo, cambiemos la salida por otra cosa. Definamos una nueva clase `CSVTableFormatter` que produzca una salida en formato CSV:
+
+``` python
+# tableformat.py
+...
+class CSVTableFormatter(TableFormatter):
+    '''
+    Datos de cartera de salida en formato CSV.
+    '''
+    def headers(self, headers):
+    print(','.join(headers))
+    
+    def row(self, rowdata):
+    print(','.join(rowdata))
+```
+
+Modifique su programa principal de la siguiente manera:
+
+``` python
+def portfolio_report(portfoliofile, pricefile):
+    '''
+    Genere un informe de acciones a partir de los archivos de datos de cartera y precios. 
+    '''
+    # Leer archivos de datos
+    portfolio = read_portfolio(portfoliofile)
+    prices = read_prices(pricefile)
+    
+    # Crear los datos del informe
+    report = make_report_data(portfolio, prices)
+    
+    # Imprimirlo
+    formatter = tableformat.CSVTableFormatter()
+    print_report(report, formatter)
+```
+
+Ahora debería ver una salida CSV como esta:
+
+``` python
+>>> ================================ RESTART ================================
+>>> import report
+>>> report.portfolio_report('Data/portfolio.csv', 'Data/prices.csv')
+Name,Shares,Price,Change
+AA,100,9.22,-22.98
+IBM,50,106.28,15.18
+CAT,150,35.46,-47.98
+MSFT,200,20.89,-30.34
+GE,95,13.48,-26.89
+MSFT,50,20.89,-44.21
+IBM,100,106.28,35.84
+```
+
+Usando una idea similar, defina una clase `HTMLTableFormatter` que produzca una tabla con lo siguiente salida:
+
+```         
+<tr><th>Name</th><th>Shares</th><th>Price</th><th>Change</th></tr>
+<tr><td>AA</td><td>100</td><td>9.22</td><td>-22.98</td></tr>
+<tr><td>IBM</td><td>50</td><td>106.28</td><td>15.18</td></tr>
+<tr><td>CAT</td><td>150</td><td>35.46</td><td>-47.98</td></tr>
+<tr><td>MSFT</td><td>200</td><td>20.89</td><td>-30.34</td></tr>
+<tr><td>GE</td><td>95</td><td>13.48</td><td>-26.89</td></tr>
+<tr><td>MSFT</td><td>50</td><td>20.89</td><td>-44.21</td></tr>
+<tr><td>IBM</td><td>100</td><td>106.28</td><td>35.84</td></tr>
+```
+
+Pruebe Su código modificando el programa principal para crear un objeto `HTMLTableFormatter` en lugar de un objeto `CSVTableFormatter`.
+
+##### Ejercicio 4.7: Polimorfismo en acción
+
+Una característica importante de la programación orientada a objetos es que puede conectar un objeto a un programa y funcionará sin tener que cambiar nada del código existente. Por ejemplo, si escribió un programa que esperaba utilizar un objeto `TableFormatter`, funcionaría sin importar qué tipo de `TableFormatter` le haya asignado. Este comportamiento a veces se denomina "polimorfismo".
+
+Un problema potencial es averiguar cómo permitir que un usuario elija el formateador que desea. El uso directo de los nombres de clase como `TextTableFormatter` suele ser molesto. Por lo tanto, puede considerar un enfoque simplificado. Tal vez puedas incorporar una declaración `if-` en el código de esta manera:
+
+``` python
+def portfolio_report(portfoliofile, pricefile, fmt='txt'):
+    '''
+    Crea un informe de acciones a partir de los archivos de datos de cartera y precios. '''
+    # Leer archivos de datos
+    portfolio = read_portfolio(portfoliofile)
+    prices = read_prices(pricefile)
+    
+    # Crear los datos del informe
+    report = make_report_data(portfolio, prices)
+    
+    # Imprimirlo
+    if fmt == 'txt':
+        formatter = tableformat.TextTableFormatter()
+        elif fmt == 'csv':
+        formatter = tableformat.CSVTableFormatter()
+    elif fmt == 'html':
+        formatter = tableformat.HTMLTableFormatter()
+    else:
+        raise RuntimeError(f'Unknown format {fmt}')
+    print_report(report, formatter)
+```
+
+En este código, el usuario especifica un nombre simplificado como `'txt'` o `'csv'` para elegir un formato. Sin embargo, ¿es la mejor idea poner una declaración `si` grande en la función `portfolio_report()`? Tal vez sea mejor mover ese código a una función de propósito general en otro lugar.
+
+En el archivo `tableformat.py`, agregue una función `create_formatter(name)` que permita a un usuario crear un formateador dado un nombre de salida como `'txt'`, `'csv'` o `'html'`. Modifique `portfolio_report()` para que se vea así:
+
+``` python
+def portfolio_report(portfoliofile, pricefile, fmt='txt'):
+    '''
+    Cree un informe de acciones dados los archivos de datos de cartera y precios.
+    '''
+    # Leer archivos de datos
+    portfolio = read_portfolio(portfoliofile)
+    prices = read_prices(pricefile)
+    
+    # Crear los datos del informe
+    report = make_report_data(portfolio, prices)
+    
+    # Imprimirlo
+    formatter = tableformat.create_formatter(fmt)
+    print_report(report, formatter)
+```
+
+Intente llamar a la función con diferentes formatos para asegurarse de que esté funcionando.
+
+##### Ejercicio 4.8: Uniendo todo
+
+Modifique el programa `report.py` para que la función `portfolio_report()` acepte un argumento opcional que especifique el formato de salida. Por ejemplo:
+
+``` python
+>>> report.portfolio_report('Data/portfolio.csv', 'Data/prices.csv', 'txt')
+      Name     Shares      Price     Change
+---------- ---------- ---------- ----------
+        AA        100       9.22     -22.98
+       IBM         50     106.28      15.18
+       CAT        150      35.46     -47.98
+      MSFT        200      20.89     -30.34
+        GE         95      13.48     -26.89
+      MSFT         50      20.89     -44.21
+       IBM        100     106.28      35.84
+>>>
+```
+
+Modifique el programa principal para que se pueda proporcionar un formato en la línea de comandos:
+
+``` bash
+bash $ python3 report.py Data/portfolio.csv Data/prices.csv csv
+Name,Shares,Price,Change
+AA,100,9.22,-22.98
+IBM,50,106.28,15.18
+CAT,150,35.46,-47.98
+MSFT,200,20.89,-30.34
+GE,95,13.48,-26.89
+MSFT,50,20.89,-44.21
+IBM,100,106.28,35.84
+bash $
+```
+
+#### Discusión
+
+Escribir código extensible es uno de los usos más comunes de la herencia en bibliotecas y marcos. Por ejemplo, un marco puede indicarle que defina su propio objeto que hereda de una clase base proporcionada. Luego se le indica que complete varios métodos que implementan varios fragmentos de funcionalidad.
+
+Otro concepto un poco más profundo es la idea de "ser dueño de sus abstracciones". En los ejercicios, definimos *nuestra propia clase* para formatear una tabla. Puede mirar su código y decirse a sí mismo "¡Debería usar una biblioteca de formato o algo que alguien más ya haya creado!" No, debe usar TANTO su clase como una biblioteca. Usar su propia clase promueve el acoplamiento estrecho (*loose coupling*) [<https://en.wikipedia.org/wiki/Loose_coupling>] es más independiente y es más flexible. Mientras su aplicación use la interfaz de programación de su clase, puede cambiar la implementación interna para que funcione de la forma que desee. Puede escribir código totalmente personalizado. Puede usar el paquete de terceros de alguien. Puede cambiar un paquete de terceros por un paquete diferente cuando encuentre uno mejor. No importa: nada del código de su aplicación se romperá mientras conserve la interfaz. Esa es una idea poderosa y es una de las razones por las que podría considerar la herencia para algo como esto.
+
+Dicho esto, diseñar programas orientados a objetos puede ser extremadamente difícil. Para obtener más información, probablemente debería buscar libros sobre el tema de los patrones de diseño (aunque comprender lo que sucedió en este ejercicio lo llevará bastante lejos en términos de usar objetos de una manera práctica y útil).
+
+[Contenido](../Contents.Rmd) \| [Anterior (4.1 Clases)](01_Class.Rmd) \| [Próximo (4.3 Métodos especiales)](03_Special_methods.Rmd)

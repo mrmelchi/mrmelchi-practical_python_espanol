@@ -1,0 +1,478 @@
+---
+title: "02_Containers"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+[Contenido](../Contenido.md) \| [Anterior (2.1 Tipos de
+datos)](01_Datatypes.md) \| [Siguiente (2.3 Formato)](03_Formato.md)
+
+### 2.2 Contenedores
+
+En esta sección se tratan listas, diccionarios y sets (conjuntos).
+
+#### Descripción general
+
+Los programas a menudo tienen que trabajar con muchos objetos.
+
+-   Una cartera de acciones
+-   Una tabla de precios de acciones
+
+Hay tres opciones principales para utilizar.
+
+-   Listas. Datos ordenados.
+-   Diccionarios. Datos desordenados.
+-   Sets. Colección desordenada de elementos únicos.
+
+#### Listas como contenedor
+
+Utilice una lista cuando el orden de los datos sea importante. Recuerde
+que las listas pueden contener cualquier tipo de objeto. Por ejemplo,
+una lista de tuplas.
+
+``` python
+portfolio = [
+    ('GOOG', 100, 490.1),
+    ('IBM', 50, 91.3),
+    ('CAT', 150, 83.44)
+]
+
+portfolio[0]            # ('GOOG', 100, 490.1)
+portfolio[2]            # ('CAT', 150, 83.44)
+```
+
+### Construcción de listas
+
+Construyendo una lista desde cero.
+
+``` python
+records = []  # Lista vacía inicial
+
+# Use .append() para adicionar màs elementos
+records.append(('GOOG', 100, 490.10))
+records.append(('IBM', 50, 91.3))
+...
+```
+
+Un ejemplo al leer registros de un archivo.
+
+``` python
+records = []  # Initial empty list
+
+with open('Data/portfolio.csv', 'rt') as f:
+    next(f) # salt los encabezados
+    for line in f:
+        row = line.split(',')
+        records.append((row[0], int(row[1]), float(row[2])))
+```
+
+#### Dicts como contenedor
+
+Los diccionarios son útiles si desea realizar búsquedas aleatorias
+rápidas (por nombre de clave). Por ejemplo, un diccionario de precios de
+acciones:
+
+``` python
+prices = {
+   'GOOG': 513.25,
+   'CAT': 87.22,
+   'IBM': 93.37,
+   'MSFT': 44.12
+}
+```
+
+A continuación se muestran algunas búsquedas sencillas:
+
+``` python
+>>> prices['IBM']
+93.37
+>>> prices['GOOG']
+513.25
+>>>
+```
+
+#### Construcción de diccionarios
+
+Ejemplo de construcción de un diccionario desde cero.
+
+``` python
+prices = {} # Diccionario vacío inicial
+
+# Insertar nuevos elementos
+prices['GOOG'] = 513.25
+prices['CAT'] = 87.22
+prices['IBM'] = 93.37
+```
+
+Un ejemplo que completa el dict a partir del contenido de un archivo.
+
+``` python
+prices = {} # Diccionario vacío inicial
+
+with open('Data/prices.csv', 'rt') as f:
+    for line in f:
+        row = line.split(',')
+        prices[row[0]] = float(row[1])
+```
+
+Nota: si prueba esto en el archivo `Data/prices.csv`, descubrirá que
+casi funciona (hay una línea en blanco al final que hace que se
+bloquee). Necesitarás encontrar alguna forma de modificar el código para
+tenerlo en cuenta (ver Ejercicio 2.6).
+
+#### Búsquedas en el diccionario
+
+Puedes probar la existencia de una clave.
+
+``` python
+if key in d:
+    # YES
+else:
+    # NO
+```
+
+Puede buscar un valor que podría no existir y proporcionar un valor
+predeterminado en caso de que no exista.
+
+``` python
+name = d.get(key, default)
+```
+
+Un ejemplo:
+
+``` python
+>>> prices.get('IBM', 0.0)
+93.37
+>>> prices.get('SCOX', 0.0)
+0.0
+>>>
+```
+
+#### Teclas compuestas
+
+Casi cualquier tipo de valor se puede utilizar como clave de diccionario
+en Python. Una clave de diccionario debe ser de un tipo que sea
+inmutable. Por ejemplo, tuplas:
+
+``` python
+holidays = {
+  (1, 1) : 'New Years',
+  (3, 14) : 'Pi day',
+  (9, 13) : "Programmer's day",
+}
+```
+
+Luego para acceder:
+
+``` python
+>>> holidays[3, 14]
+'Pi day'
+>>>
+```
+
+*Ni una lista, ni un set, ni otro diccionario pueden servir como clave
+de diccionario, porque las listas y los diccionarios son mutables.*
+
+#### Set (Conjunto)
+
+Los conjuntos son colecciones de elementos únicos no ordenados.
+
+``` python
+tech_stocks = { 'IBM','AAPL','MSFT' }
+# Sintaxis alternativa
+tech_stocks = set(['IBM', 'AAPL', 'MSFT'])
+```
+
+Los conjuntos son útiles para las pruebas de pertenencia.
+
+``` python
+>>> tech_stocks
+set(['AAPL', 'IBM', 'MSFT'])
+>>> 'IBM' in tech_stocks
+True
+>>> 'FB' in tech_stocks
+False
+>>>
+```
+
+Los conjuntos también son útiles para la eliminación de duplicados.
+
+``` python
+names = ['IBM', 'AAPL', 'GOOG', 'IBM', 'GOOG', 'YHOO']
+
+unique = set(names)
+# unique = set(['IBM', 'AAPL','GOOG','YHOO'])
+```
+
+Operaciones de conjunto adicionales:
+
+``` python
+unique.add('CAT')        # Agregar elemento
+unique.remove('YHOO')    # Remover un elemento
+
+s1 = { 'a', 'b', 'c'}
+s2 = { 'c', 'd' }
+s1 | s2                 # Set union { 'a', 'b', 'c', 'd' }
+s1 & s2                 # Set intersección { 'c' }
+s1 - s2                 # Set diferencia { 'a', 'b' }
+```
+
+#### Ejercicios
+
+En estos ejercicios, comenzará a construir uno de los programas
+principales utilizados en el resto de este curso. Realice su trabajo en
+el archivo `Work/report.py`.
+
+##### Ejercicio 2.4: Una lista de tuplas
+
+El archivo `Data/portfolio.csv` contiene una lista de acciones en una
+cartera. En el [Ejercicio 1.30](../01_Introduction/07_Functions.Rmd),
+escribió una función `portfolio_cost(filename)` que leyó este archivo y
+realizó un cálculo simple.
+
+Tu código debería verse así:
+
+``` python
+# pcost.py
+
+import csv
+
+def portfolio_cost(filename):
+    '''Calcula el costo total (shares*price) de un archivo de cartera de acciones'''
+    total_cost = 0.0
+
+    with open(filename, 'rt') as f:
+        rows = csv.reader(f)
+        headers = next(rows)
+        for row in rows:
+            nshares = int(row[1])
+            price = float(row[2])
+            total_cost += nshares * price
+    return total_cost
+```
+
+Usando este código como guía aproximada, cree un nuevo archivo
+`report.py`. En ese archivo, defina una función
+`read_portfolio(filename)` que abra un archivo de cartera determinado y
+lo lea en una lista de tuplas. Para hacer esto, vas a realizar algunas
+modificaciones menores al código anterior.
+
+Primero, en lugar de definir `total_cost = 0`, crearás una variable que
+inicialmente estará configurada en una lista vacía. Por ejemplo:
+
+``` python
+portfolio = []
+```
+
+A continuación, en lugar de sumar el costo, convertirá cada fila en una
+tupla exactamente como lo hizo en el último ejercicio y la agregará a
+esta lista. Por ejemplo:
+
+``` python
+for row in rows:
+    holding = (row[0], int(row[1]), float(row[2]))
+    portfolio.append(holding)
+```
+
+Finalmente, devolverá la lista `portfolio` resultante.
+
+Experimente con su función de forma interactiva (solo un recordatorio de
+que para hacer esto, primero debe ejecutar el programa `report.py` en el
+intérprete):
+
+*Sugerencia: use `-i` al ejecutar el archivo en la terminal*
+
+``` python
+>>> portfolio = read_portfolio('Data/portfolio.csv')
+>>> portfolio
+[('AA', 100, 32.2), ('IBM', 50, 91.1), ('CAT', 150, 83.44), ('MSFT', 200, 51.23),
+    ('GE', 95, 40.37), ('MSFT', 50, 65.1), ('IBM', 100, 70.44)]
+>>>
+>>> portfolio[0]
+('AA', 100, 32.2)
+>>> portfolio[1]
+('IBM', 50, 91.1)
+>>> portfolio[1][1]
+50
+>>> total = 0.0
+>>> for s in portfolio:
+        total += s[1] * s[2]
+
+>>> print(total)
+44671.15
+>>>
+```
+
+Esta lista de tuplas que ha creado es muy similar a una matriz 2D. Por
+ejemplo, puede acceder a una columna y fila específicas mediante una
+búsqueda como `portfolio[fila][columna]`, donde `fila` y `columna` son
+números enteros.
+
+Dicho esto, también puedes reescribir el último bucle `for` usando una
+declaración como esta:
+
+``` python
+>>> total = 0.0
+>>> for name, shares, price in portfolio:
+            total += shares*price
+
+>>> print(total)
+44671.15
+>>>
+```
+
+##### Ejercicio 2.5: Lista de diccionarios
+
+Tome la función que escribió en el Ejercicio 2.4 y modifíquela para
+representar cada acción en la cartera con un diccionario en lugar de una
+tupla. En este diccionario, utilice los nombres de campo `name`,
+`shares` y `prices`para representar las diferentes columnas en el
+archivo de entrada.
+
+Experimente con esta nueva función de la misma manera que lo hizo en el
+Ejercicio 2.4.
+
+``` python
+>>> portfolio = read_portfolio('Data/portfolio.csv')
+>>> portfolio
+[{'name': 'AA', 'shares': 100, 'price': 32.2}, {'name': 'IBM', 'shares': 50, 'price': 91.1},
+    {'name': 'CAT', 'shares': 150, 'price': 83.44}, {'name': 'MSFT', 'shares': 200, 'price': 51.23},
+    {'name': 'GE', 'shares': 95, 'price': 40.37}, {'name': 'MSFT', 'shares': 50, 'price': 65.1},
+    {'name': 'IBM', 'shares': 100, 'price': 70.44}]
+>>> portfolio[0]
+{'name': 'AA', 'shares': 100, 'price': 32.2}
+>>> portfolio[1]
+{'name': 'IBM', 'shares': 50, 'price': 91.1}
+>>> portfolio[1]['shares']
+50
+>>> total = 0.0
+>>> for s in portfolio:
+        total += s['shares']*s['price']
+
+>>> print(total)
+44671.15
+>>>
+```
+
+Aquí, notarás que se accede a los diferentes campos de cada entrada
+mediante nombres de clave en lugar de números de columna numéricos. A
+menudo se prefiere esto porque el código resultante es más fácil de leer
+más adelante.
+
+Visualizar diccionarios y listas grandes puede resultar complicado. Para
+limpiar la salida para la depuración, considere usar la función
+`pprint`.
+
+``` python
+>>> from pprint import pprint
+>>> pprint(portfolio)
+[{'name': 'AA', 'price': 32.2, 'shares': 100},
+    {'name': 'IBM', 'price': 91.1, 'shares': 50},
+    {'name': 'CAT', 'price': 83.44, 'shares': 150},
+    {'name': 'MSFT', 'price': 51.23, 'shares': 200},
+    {'name': 'GE', 'price': 40.37, 'shares': 95},
+    {'name': 'MSFT', 'price': 65.1, 'shares': 50},
+    {'name': 'IBM', 'price': 70.44, 'shares': 100}]
+>>>
+```
+
+##### Ejercicio 2.6: Los diccionarios como contenedor
+
+Un diccionario es una forma útil de realizar un seguimiento de los
+elementos, en los que desea buscar elementos utilizando un índice que no
+sea un número entero. En el shell de Python, intenta jugar con un
+diccionario:
+
+``` python
+>>> prices = { }
+>>> prices['IBM'] = 92.45
+>>> prices['MSFT'] = 45.12
+>>> prices
+... vea el resultado ...
+>>> prices['IBM']
+92.45
+>>> prices['AAPL']
+... vea el resultado ...
+>>> 'AAPL' in prices
+False
+>>>
+```
+
+El archivo `Data/prices.csv` contiene una serie de líneas con precios de
+acciones. El archivo se parece a esto:
+
+``` csv
+"AA",9.22
+"AXP",24.85
+"BA",44.85
+"BAC",11.27
+"C",3.72
+...
+```
+
+Escriba una función `read_prices(filename)` que lea un conjunto de
+precios como este en un diccionario donde las claves del diccionario son
+los nombres de las acciones y los valores en el diccionario son los
+precios de las acciones.
+
+Para hacer esto, comience con un diccionario vacío y comience a insertar
+valores en él tal como lo hizo anteriormente. Sin embargo, ahora estás
+leyendo los valores de un archivo.
+
+Utilizaremos esta estructura de datos para buscar rápidamente el precio
+de una acción determinada.
+
+Algunos pequeños consejos que necesitarás para esta parte. Primero,
+asegúrate de utilizar el módulo `csv` tal como lo hiciste antes; no es
+necesario reinventar la rueda aquí.
+
+``` python
+>>> import csv
+>>> f = open('Data/prices.csv', 'r')
+>>> rows = csv.reader(f)
+>>> for row in rows:
+        print(row)
+
+
+['AA', '9.22']
+['AXP', '24.85']
+...
+[]
+>>>
+```
+
+La otra pequeña complicación es que el archivo `Data/prices.csv` puede
+tener algunas líneas en blanco. Observe cómo la última fila de datos
+anterior es una lista vacía, lo que significa que no había datos
+presentes en esa línea.
+
+Existe la posibilidad de que esto provoque que su programa muera con una
+excepción. Utilice las instrucciones `try` y `except` para detectar esto
+según corresponda. Pensamiento: ¿sería mejor protegerse contra datos
+erróneos con una declaración `if`?
+
+Una vez que haya escrito su función `read_prices()`, pruébela de forma
+interactiva para asegurarse de que funciona:
+
+``` python
+>>> prices = read_prices('Data/prices.csv')
+>>> prices['IBM']
+106.28
+>>> prices['MSFT']
+20.89
+>>>
+```
+
+##### Ejercicio 2.7: Cómo saber si puedes jubilarte
+
+Conecte todo este trabajo agregando algunas declaraciones adicionales a
+su programa `report.py` que calcula la ganancia/pérdida. Estas
+afirmaciones deben tomar la lista de acciones del Ejercicio 2.5 y el
+diccionario de precios del Ejercicio 2.6 y calcular el valor actual de
+la cartera junto con la ganancia/pérdida.
+
+[Contenido](../Contents.Rmd) \| [Anterior (2.1 Tipos de
+datos)](01_Datatypes.Rmd) \| [Siguiente (2.3 Salida con
+formato)](03_Formatting.Rmd)

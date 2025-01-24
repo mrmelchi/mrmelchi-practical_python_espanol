@@ -1,0 +1,302 @@
+---
+title: "05_Main_module"
+output: html_document
+---
+
+[Conteido](../Contents.Rmd) \| [Anterior (3.4 Módulos)](04_Modules.Rmd) \| [Próximo (3.6 Discusión sobre el diseño)](06_Design_discussion.Rmd)
+
+### 3.5 Módulo principal
+
+Esta sección presenta el concepto de un programa principal o módulo principal.
+
+#### Funciones principales
+
+En muchos lenguajes de programación, existe el concepto de una función o método *principal*.
+
+``` c
+// c / c++
+int main(int argc, char *argv[]) {
+...
+}
+```
+
+``` java
+// java
+class myprog {
+public static void main(String args[]) {
+...
+}
+}
+```
+
+Esta es la primera función que se ejecuta cuando se inicia una aplicación.
+
+#### Módulo principal de Python
+
+Python no tiene una función o método *principal*. En cambio, hay un módulo *principal*. El *módulo principal* es el archivo fuente que se ejecuta primero.
+
+``` bash
+bash % python3 prog.py
+...
+```
+
+Cualquier archivo que le dé al intérprete al inicio se convierte en *principal*. No importa el nombre.
+
+#### `__main__` verificación
+
+Es una práctica estándar para los módulos que se ejecutan como un script principal usar esta convención:
+
+``` python
+# prog.py
+...
+if __name__ == '__main__':
+    # Ejecutando como el programa principal ...
+    declaraciones
+    ...
+```
+
+Las declaraciones incluidas dentro de la declaración `if` se convierten en el programa *principal*.
+
+#### Programas principales vs. importaciones de bibliotecas
+
+Cualquier archivo Python puede ejecutarse como principal o como una importación de biblioteca:
+
+``` bash
+bash % python prog.py # Ejecutando como principal
+```
+
+``` python
+import prog # Ejecutando como importación de biblioteca
+```
+
+En ambos casos, `__name__` es el nombre del módulo. Sin embargo, solo se establecerá en `__main__` si se ejecuta como principal.
+
+Por lo general, no desea que las declaraciones que son parte del programa principal se ejecuten en una importación de biblioteca. Por lo tanto, es común tener un `if-`check en el código que se puede usar de cualquier manera.
+
+``` python
+if __name__ == '__main__':
+    # No se ejecuta si se carga con importación ...
+```
+
+#### Plantilla de programa
+
+A continuación, se incluye una plantilla de programa común para escribir un programa Python:
+
+``` python
+# prog.py
+# Declaraciones de importación (bibliotecas)
+import modules
+
+# Funciones
+def spam():
+    ...
+
+def blah():
+    ...
+
+# Función principal
+def main():
+    ...
+
+if __name__ == '__main__':
+    main()
+```
+
+#### Herramientas de línea de comandos
+
+Python se utiliza a menudo para herramientas de línea de comandos
+
+``` bash
+bash % python report.py portfolio.csv prices.csv
+```
+
+Significa que los scripts se ejecutan desde el shell/terminal. Los casos de uso más comunes son la automatización, las tareas en segundo plano, etc.
+
+#### Argumentos de la línea de comandos
+
+La línea de comandos es una lista de cadenas de texto.
+
+``` bash
+bash % python report.py portfolio.csv prices.csv
+```
+
+Esta lista de cadenas de texto se encuentra en `sys.argv`.
+
+``` python
+# En el comando bash anterior
+sys.argv # ['report.py, 'portfolio.csv', 'prices.csv']
+```
+
+A continuación, se incluye un ejemplo simple de procesamiento de los argumentos:
+
+``` python
+import sys
+
+if len(sys.argv) != 3:
+    raise SystemExit(f'Usage: {sys.argv[0]} ' 'portfile pricefile')
+portfile = sys.argv[1]
+pricefile = sys.argv[2]
+...
+```
+
+#### E/S estándar
+
+La entrada/salida estándar (o stdio) son archivos que funcionan de la misma manera que los archivos normales.
+
+``` python
+sys.stdout
+sys.stderr
+sys.stdin
+```
+
+De manera predeterminada, la impresión se dirige a `sys.stdout`. La entrada se lee desde `sys.stdin`. Los seguimientos y errores se dirigen a `sys.stderr`.
+
+Tenga en cuenta que *stdio* podría estar conectado a terminales, archivos, tuberías, etc.
+
+``` bash
+bash % python prog.py > results.txt
+# o
+bash % cmd1 | python prog.py | cmd2
+```
+
+#### Variables de entorno
+
+Las variables de entorno se configuran en el shell.
+
+``` bash
+bash % setenv NAME dave
+bash % setenv RSH ssh
+bash % python3 prog.py
+```
+
+`os.environ` es un diccionario que contiene estos valores.
+
+``` python
+import os
+
+name = os.environ['NAME'] # 'dave'
+```
+
+Los cambios se reflejan en cualquier subproceso que el programa inicie posteriormente.
+
+#### Salida del programa
+
+La salida del programa se maneja mediante excepciones.
+
+``` python
+raise SystemExit
+raise SystemExit(exitcode)
+raise SystemExit('Mensaje Informativo')
+```
+
+Una alternativa.
+
+``` python
+import sys
+sys.exit(exitcode)
+```
+
+Un código de salida distinto de cero indica un error.
+
+#### La línea `#!`
+
+En Unix, la línea `#!` puede iniciar un script como Python. Agregue lo siguiente a la primera línea de su archivo de script.
+
+``` python
+#!/usr/bin/env python3
+# prog.py
+...
+```
+
+Requiere el permiso de ejecución.
+
+``` bash
+bash % chmod +x prog.py
+# Luego puedes ejecutar
+bash % prog.py
+... output ...
+```
+
+*Nota: El lanzador de Python en Windows también busca la línea `#!` para indicar la versión del idioma.*
+
+#### Plantilla de script
+
+Finalmente, aquí hay una plantilla de código común para programas Python que se ejecutan como scripts de línea de comandos:
+
+``` python
+#!/usr/bin/env python
+# prog.py
+
+# Declaraciones de importación (bibliotecas)
+import modules
+
+# Funciones
+def spam():
+    ...
+
+def blah():
+    ...
+
+# Función principal
+def main(argv):
+    # Analizar argumentos de línea de comandos, entorno, etc.
+    ...
+
+if __name__ == '__main__':
+    import sys
+    main(sys.argv)
+```
+
+#### Ejercicios
+
+##### Ejercicio 3.15: funciones `main()`
+
+En el archivo `report.py`, agregue una función `main()` que acepte una lista de opciones de línea de comandos y produzca el mismo resultado que antes. Debería poder ejecutarla en modo interactivo de esta manera:
+
+``` python
+>>> import report
+>>> report.main(['report.py', 'Data/portfolio.csv', 'Data/prices.csv'])
+      Name     Shares      Price     Change
+---------- ---------- ---------- ----------
+        AA        100       9.22     -22.98
+       IBM         50     106.28      15.18
+       CAT        150      35.46     -47.98
+      MSFT        200      20.89     -30.34
+        GE         95      13.48     -26.89
+      MSFT         50      20.89     -44.21
+       IBM        100     106.28      35.84
+>>>
+```
+
+```         
+
+Modifique el archivo `pcost.py` para que tenga una función `main()` similar:
+
+```python
+>>> import pcost
+>>> pcost.main(['pcost.py', 'Data/portfolio.csv'])
+Total cost: 44671.15
+>>>
+```
+
+##### Ejercicio 3.16: Creación de scripts
+
+Modifique los programas `report.py` y `pcost.py` para que puedan ejecutarse como un script en la línea de comandos:
+
+``` bash
+bash $ python report.py Data/portfolio.csv Data/prices.csv
+      Name     Shares      Price     Change
+---------- ---------- ---------- ----------
+        AA        100       9.22     -22.98
+       IBM         50     106.28      15.18
+       CAT        150      35.46     -47.98
+      MSFT        200      20.89     -30.34
+        GE         95      13.48     -26.89
+      MSFT         50      20.89     -44.21
+       IBM        100     106.28      35.84
+
+bash $ python3 pcost.py Data/portfolio.csv
+Total cost: 44671.15
+```
+
+[Contenido](../Contents.Rmd) \| [Anterior (3.4 Módulos)](04_Modules.Rmd) \| [Próximo (3.6 Discusión sobre el diseño)](06_Design_discussion.Rmd)

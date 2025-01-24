@@ -1,0 +1,10 @@
+---
+title: "README"
+output: html_document
+---
+
+### Área de trabajo
+
+Realice todo su trabajo de codificación aquí, en el directorio `Work/`. Se han proporcionado varios archivos de inicio (`bounce.py`, `mortgage.py`, `pcost.py`, etc.) junto con su número de ejercicio correspondiente.
+
+Muchos de los programas que escribe hacen referencia a archivos que se encuentran en el directorio `Data/`. Este también se encuentra aquí.

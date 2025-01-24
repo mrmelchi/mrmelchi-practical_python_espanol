@@ -1,0 +1,272 @@
+---
+title: "01_Class"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (3.6 Discusión sobre el diseño)](../03_Program_organization/06_Design_discussion.Rmd) \| [Próximo (4.2 Herencia)](02_Inheritance.Rmd)
+
+### 4.1 Clases
+
+Esta sección presenta la declaración de clase y la idea de crear nuevos objetos.
+
+#### Programación Orientada a Objetos (OO)
+
+Una técnica de programación en la que el código se organiza como una colección de *objetos*.
+
+Un *objeto* consta de:
+
+-   Datos. Atributos
+-   Comportamiento. Métodos que son funciones aplicadas al objeto.
+
+Ya ha estado utilizando algo de OO durante este curso.
+
+Por ejemplo, manipular una lista.
+
+``` python
+>>> nums = [1, 2, 3]
+>>> nums.append(4) # Método
+>>> nums.insert(1,10) # Método
+>>> nums
+[1, 10, 2, 3, 4] # Datos
+>>>
+```
+
+`nums` es una *instancia* de una lista.
+
+Los métodos (`append()` y `insert()`) se adjuntan a la instancia (`nums`).
+
+#### La declaración `class`
+
+Use la declaración `class` para definir un nuevo objeto.
+
+``` python
+class Player:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.health = 100
+
+    def move(self, dx, dy):
+        self.x += dx
+        self.y += dy
+
+def damage(self, pts):
+        self.health -= pts
+```
+
+En pocas palabras, una clase es un conjunto de funciones que realizan varias operaciones en las llamadas *instancias*.
+
+#### Instancias
+
+Las instancias son los *objetos* reales que manipulas en tu programa.
+
+Se crean llamando a la clase como una función.
+
+``` python
+>>> a = Player(2, 3)
+>>> b = Player(10, 20)
+>>>
+```
+
+`a` y `b` son instancias de `Player`.
+
+*Enfatizar: La declaración de clase es solo la definición (no hace nada por sí misma). Similar a una definición de función.*
+
+#### Datos de instancia
+
+Cada instancia tiene sus propios datos locales.
+
+``` python
+>>> a.x
+2
+>>> b.x
+10
+```
+
+Estos datos se inicializan mediante `__init__()`.
+
+``` python
+class Player:
+    def __init__(self, x, y):
+    # Cualquier valor almacenado en `self` son datos de instancia
+        self.x = x
+        self.y = y
+        self.health = 100
+```
+
+No hay restricciones sobre la cantidad total o el tipo de atributos almacenados.
+
+#### Métodos de instancia
+
+Los métodos de instancia son funciones que se aplican a instancias de un objeto.
+
+``` python
+class Player:
+    ...
+    # `move` es un método
+    def move(self, dx, dy):
+        self.x += dx
+        self.y += dy
+```
+
+El objeto en sí siempre se pasa como primer argumento.
+
+``` python
+>>> a.move(1, 2)
+
+# hace coincidir `a` con `self`
+# hace coincidir `1` con `dx`
+# hace coincidir `2` con `dy`
+def move(self, dx, dy):
+```
+
+Por convención, la instancia se llama `self`. Sin embargo, el nombre real utilizado no es importante. El objeto siempre se pasa como primer argumento. Es simplemente el estilo de programación de Python llamar a este argumento `self`.
+
+#### Alcance de la clase
+
+Las clases no definen un alcance de nombres.
+
+``` python
+class Player:
+    ...
+    def move(self, dx, dy):
+        self.x += dx
+        self.y += dy
+
+    def left(self, amt):
+        move(-amt, 0) # NO. Llama a una función `move` global
+        self.move(-amt, 0) # SÍ. Llama al método `move` de arriba.
+```
+
+Si desea operar en una instancia, siempre debe hacer referencia a ella explícitamente (por ejemplo, `self`).
+
+#### Ejercicios
+
+A partir de este conjunto de ejercicios, comenzaremos a realizar una serie de cambios en el código existente de las secciones anteriores. Es fundamental que tenga una versión funcional del Ejercicio 3.18 para comenzar. Si no la tiene, trabaje a partir del código de solución que se encuentra en el directorio `Solutions/3_18`. Está bien copiarlo.
+
+##### Ejercicio 4.1: Objetos como estructuras de datos
+
+En las secciones 2 y 3, trabajamos con datos representados como tuplas y diccionarios. Por ejemplo, una cartera de acciones se podría representar como una tupla como esta:
+
+``` python
+s = ('GOOG',100,490.10)
+```
+
+o como un diccionario como este:
+
+``` python
+s = { 'name' : 'GOOG',
+      'shares' : 100,
+      'price' : 490.10
+}
+```
+
+Incluso puede escribir funciones para manipular dichos datos. Por ejemplo:
+
+``` python
+def cost(s):
+    return s['shares'] * s['price']
+```
+
+Sin embargo, a medida que su programa crezca, es posible que desee crear una mejor sensación de organización. Por lo tanto, otro enfoque para representar datos sería definir una clase. Cree un archivo llamado `stock.py` y defina una clase `Stock` que represente una única tenencia de acciones. Haga que las instancias de `Stock` tengan los atributos `name`, `shares` y `price`. Por ejemplo:
+
+``` python
+>>> import stock
+>>> a = stock.Stock('GOOG',100,490.10)
+>>> a.name
+'GOOG'
+>>> a.shares
+100
+>>> a.price
+490.1
+>>>
+```
+
+Cree algunos objetos `Stock` más y manipúlelos. Por ejemplo:
+
+``` python
+>>> b = stock.Stock('AAPL', 50, 122.34)
+>>> c = stock.Stock('IBM', 75, 91.75)
+>>> b.shares * b.price
+6117.0
+>>> c.shares * c.price
+6881.25
+>>> stocks = [a, b, c]
+>>> stocks
+[<stock.Objeto Stock en 0x37d0b0>, <stock.Objeto Stock en 0x37d110>, <stock.Objeto Stock en 0x37d050>]
+>>> for s in stocks:
+        print(f'{s.name:>10s} {s.shares:>10d} {s.price:>10.2f}')
+
+... mira el resultado...
+>>>
+```
+
+Una cosa que hay que destacar aquí es que la clase `Stock` actúa como una fábrica para crear instancias de objetos. Básicamente, la llamas como una función y crea un nuevo objeto para ti. Además, hay que destacar que cada objeto es distinto: cada uno tiene sus propios datos que están separados de otros objetos que se han creado.
+
+Un objeto definido por una clase es algo similar a un diccionario, solo que con una sintaxis ligeramente diferente. Por ejemplo, en lugar de escribir `s['nombre']` o `s['precio']`, ahora escribes `s.nombre` y `s.precio`.
+
+##### Ejercicio 4.2: Agregar algunos métodos
+
+Con las clases, puedes adjuntar funciones a tus objetos. Estas se conocen como métodos y son funciones que operan sobre los datos almacenados dentro de un objeto. Agrega un método `cost()` y `sell()` a tu objeto `Stock`. Deberían funcionar así:
+
+``` python
+>>> import stock
+>>> s = stock.Stock('GOOG', 100, 490.10)
+>>> s.cost()
+49010.0
+>>> s.shares
+100
+>>> s.sell(25)
+>>> s.shares
+75
+>>> s.cost()
+36757.5
+>>>
+```
+
+##### Ejercicio 4.3: Creación de una lista de instancias
+
+Pruebe estos pasos para crear una lista de instancias de `Stock` a partir de una lista de diccionarios. Luego, calcula el costo total:
+
+``` python
+>>> import fileparse
+>>> with open('Data/portfolio.csv') as lines:
+...     portdicts = fileparse.parse_csv(lines, select=['name','shares','price'], types=[str,int,float])
+...
+>>> portfolio = [ stock.Stock(d['name'], d['shares'], d['price']) for d in portdicts]
+>>> portfolio
+[<stock.Objeto Stock en 0x10c9e2128>, <stock.Objeto Stock en 0x10c9e2048>, <stock.Objeto Stock en 0x10c9e2080>,
+<stock.Objeto Stock en 0x10c9e25f8>, <stock.Objeto Stock en 0x10c9e2630>, <stock.Stock object at 0x10ca6f748>,
+<stock.Stock object at 0x10ca6f7b8>]
+>>> sum([s.cost() for s in portfolio])
+44671.15
+>>>
+```
+
+#### Ejercicio 4.4: Utilizando tu clase
+
+Modifique la función `read_portfolio()` en el programa `report.py` para que lea un portfolio en una lista de instancias de `Stock` como se muestra en el Ejercicio 4.3. Una vez que haya hecho eso, corrija todo el código en `report.py` y `pcost.py` para que funcione con instancias `Stock` en lugar de diccionarios.
+
+Sugerencia: No debería tener que hacer cambios importantes en el código. Principalmente cambiará el acceso al diccionario como `s['shares']` a `s.shares`.
+
+Deberías poder ejecutar tus funciones de la misma manera que antes:
+
+``` python
+>>> import pcost
+>>> pcost.portfolio_cost('Data/portfolio.csv')
+44671.15
+>>> import report
+>>> report.portfolio_report('Data/portfolio.csv', 'Data/prices.csv')
+      Name     Shares      Price     Change
+---------- ---------- ---------- ----------
+        AA        100       9.22     -22.98
+       IBM         50     106.28      15.18
+       CAT        150      35.46     -47.98
+      MSFT        200      20.89     -30.34
+        GE         95      13.48     -26.89
+      MSFT         50      20.89     -44.21
+       IBM        100     106.28      35.84
+>>>
+```
+
+[Contenido](../Contents.Rmd) \| [Anterior (3.6 Discusión sobre el diseño)](../03_Program_organization/06_Design_discussion.Rmd) \| [Próximo (4.2 Herencia)](02_Inheritance.Rmd)

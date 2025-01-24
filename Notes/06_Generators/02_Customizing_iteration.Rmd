@@ -1,0 +1,231 @@
+---
+title: "02_Customizing_iteration"
+output: html_document
+---
+
+[Contenido](../Contenido.md) \| [Anterior (6.1 Protocolo de iteración)](01_Protocolo_de_iteración.md) \| [Siguiente (6.3 Productor/Consumidor)](03_Productores_consumidores.md)
+
+### 6.2 Personalización de la iteración
+
+Esta sección analiza cómo se puede personalizar la iteración utilizando una función generadora.
+
+#### Un problema
+
+Supongamos que desea crear su propio patrón de iteración personalizado.
+
+Por ejemplo, una cuenta regresiva.
+
+``` python
+>>> for x in countdown(10):
+...     print(x, end=' ')
+...
+10 9 8 7 6 5 4 3 2 1
+>>>
+```
+
+Hay una manera fácil de hacer esto.
+
+#### Generadores
+
+Un generador es una función que define la iteración.
+
+``` python
+def countdown(n):
+    while n > 0:
+        yield n
+        n -= 1
+```
+
+Por ejemplo:
+
+``` python
+>>> for x in countdown(10):
+...     print(x, end=' ')
+...
+10 9 8 7 6 5 4 3 2 1
+>>>
+```
+
+Un generador es cualquier función que utiliza la declaración `yield`.
+
+El comportamiento de los generadores es diferente al de una función normal. Al llamar a una función de generador se crea un objeto generador. No se ejecuta inmediatamente la función.
+
+``` python
+def countdown(n):
+    # Se agregó una declaración de impresión
+    print('Cuenta regresiva desde', n)
+    while n > 0:
+        yield n
+        n -= 1
+```
+
+``` python
+>>> x = countdown(10)
+# NO HAY DECLARACIÓN DE IMPRESIÓN
+>>> x
+# x es un objeto generador
+<generator object countdown at 0x0000028C7FDB9FF0>
+>>>
+```
+
+La función solo se ejecuta en la llamada `__next__()`.
+
+``` python
+>>> x = countdown(10)
+>>> x
+<generator object countdown at 0x0000028C7FDB9FF0>
+>>> x.__next__()
+Cuenta regresiva desde 10
+10
+>>>
+```
+
+`yield` produce un valor, pero suspende la ejecución de la función. La función se reanuda en la siguiente llamada a `__next__()`.
+
+``` python
+>>> x.__next__()
+9
+>>> x.__next__()
+8
+```
+
+Cuando el generador finalmente retorna, la iteración genera un error.
+
+``` python
+>>> x.__next__()
+1
+>>> x.__next__()
+Traceback (most recent call last):
+File "<stdin>", line 1, in ? StopIteration
+>>>
+```
+
+*Observación: una función generadora implementa el mismo protocolo de bajo nivel que las instrucciones `for` usan en listas, tuplas, diccionarios, archivos, etc.*
+
+#### Ejercicios
+
+##### Ejercicio 6.4: Un generador simple
+
+Si alguna vez te encuentras con ganas de personalizar la iteración, siempre debes pensar en funciones generadoras. Son fáciles de escribir: crea una función que lleve a cabo la lógica de iteración deseada y usa `yield` para emitir valores.
+
+Por ejemplo, prueba este generador que busca en un archivo líneas que contengan una subcadena coincidente:
+
+``` python
+>>> def filematch(filename, substr):
+        with open(filename, 'r') as f:
+            for line in f:
+                if substr in line:
+                    yield line
+
+>>> for line in open('Data/portfolio.csv'):
+        print(line, end='')
+
+name,shares,price
+"AA",100,32.20
+"IBM",50,91.10
+"CAT",150,83.44
+"MSFT",200,51.23
+"GE",95,40.37
+"MSFT",50,65.10
+"IBM",100,70.44
+>>> for line in filematch('Data/portfolio.csv', 'IBM'):
+        print(line, end='')
+
+"IBM",50,91.10
+"IBM",100,70.44
+>>>
+```
+
+Esto es bastante interesante: la idea de que se puede ocultar un montón de procesamiento personalizado en una función y utilizarlo para alimentar un bucle `for`. El siguiente ejemplo analiza un caso más inusual.
+
+##### Ejercicio 6.5: Monitoreo de una fuente de datos en tiempo real
+
+Los generadores pueden ser una forma interesante de monitorear fuentes de datos en tiempo real, como archivos de registro o feeds del mercado de valores. En esta parte, exploraremos esta idea. Para comenzar, siga atentamente las siguientes instrucciones.
+
+El programa `Data/stocksim.py` es un programa que simula datos del mercado de valores. Como salida, el programa escribe constantemente datos en tiempo real en un archivo `Data/stocklog.csv`. En una ventana de comandos independiente, vaya al directorio `Data/` y ejecute este programa:
+
+``` bash
+bash % python3 stocksim.py
+```
+
+Si está en Windows, simplemente busque el programa `stocksim.py` y haga doble clic en él para ejecutarlo. Ahora, olvídese de este programa (simplemente déjelo ejecutar). En otra ventana, observe el archivo `Data/stocklog.csv` que está escribiendo el simulador. Debería ver nuevas líneas de texto que se agregan al archivo cada pocos segundos. Nuevamente, simplemente deje que este programa se ejecute en segundo plano; se ejecutará durante varias horas (no debería tener que preocuparse por eso).
+
+Una vez que se esté ejecutando el programa anterior, escribamos un pequeño programa para abrir el archivo, buscar hasta el final y observar si hay un nuevo resultado. Cree un archivo `follow.py` y pon este código en él:
+
+``` python
+# follow.py
+import os
+import time
+
+f = open('Data/stocklog.csv')
+f.seek(0, os.SEEK_END)   # Mueve el puntero del archivo 0 bytes desde el final del archivo
+
+while True:
+    line = f.readline()
+    if line == '':
+        time.sleep(0.1)   # Duerme brevemente y vuelve a intentar
+        continue
+    fields = line.split(',')
+    name = fields[0].strip('"')
+    price = float(fields[1])
+    change = float(fields[4])
+    if change < 0:
+        print(f'{name:>10s} {price:>10.2f} {change:>10.2f}')
+```
+
+Si ejecutas el programa, verás un indicador de cotización de acciones en tiempo real. Debajo del capó, Este código es similar al comando `tail -f` de Unix que se usa para ver un archivo de registro.
+
+Nota: El uso del método `readline()` en este ejemplo es algo inusual, ya que no es la forma habitual de leer líneas de un archivo (normalmente, solo se usaría un bucle `for`). Sin embargo, en este caso, lo estamos usando para sondear repetidamente el final del archivo para ver si se han agregado más datos (`readline()` devolverá datos nuevos o una cadena vacía).
+
+##### Ejercicio 6.6: Uso de un generador para producir datos
+
+Si observa el código del Ejercicio 6.5, la primera parte del código produce líneas de datos, mientras que las instrucciones al final del bucle `while` consumen los datos. Una característica importante de las funciones generadoras es que puede mover todo el código de producción de datos a una función reutilizable.
+
+Modifique el código del Ejercicio 6.5 para que la lectura del archivo la realice una función generadora `follow(filename)`. Haz que funcione el siguiente código:
+
+``` python
+>>> for line in follow('Data/stocklog.csv'):
+        print(line, end='')
+
+... Deberías ver líneas de salida generadas aquí...
+```
+
+Modifica el código del ticker de acciones para que se vea así:
+
+``` python
+if __name__ == '__main__':
+    for line in follow('Data/stocklog.csv'):
+        fields = line.split(',')
+        name = fields[0].strip('"')
+        price = float(fields[1])
+        change = float(fields[4])
+        if change < 0:
+            print(f'{name:>10s} {price:>10.2f} {change:>10.2f}')
+```
+
+##### Ejercicio 6.7: Observando tu cartera
+
+Modifica el programa `follow.py` para que observe el flujo de datos de acciones e imprime un ticker que muestra información solo de las acciones en una cartera. Por ejemplo:
+
+``` python
+if __name__ == '__main__':
+    import report
+
+    portfolio = report.read_portfolio('Data/portfolio.csv')
+
+    for line in follow('Data/stocklog.csv'):
+        fields = line.split(',')
+        name = fields[0].strip('"')
+        price = float(fields[1])
+        change = float(fields[4])
+        if name in portfolio:
+            print(f'{name:>10s} {price:>10.2f} {change:>10.2f}')
+```
+
+Nota: Para que esto funcione, su clase `Portfolio` debe admitir el operador `in`. Consulte el [Ejercicio 6.3](01_Iteration_protocol) y asegúrese de implementar el operador `__contains__()`.
+
+#### Discusión
+
+Aquí acaba de ocurrir algo muy poderoso. Has trasladado un patrón de iteración interesante (leer líneas al final de un archivo) a su propia pequeña función. La función `follow()` es ahora una utilidad de propósito completamente general que puede utilizar en cualquier programa. Por ejemplo, puede utilizarla para ver registros de servidores, registros de depuración y otras fuentes de datos similares. Eso es genial.
+
+[Contenido](../Contents.Rmd) \| [Anterior (6.1 Protocolo de iteración)](01_Iteration_protocol.Rmd) \| [Próximo (6.3 Problemas y flujos de trabajo de productores y consumidores)](03_Producers_consumers.Rmd)

@@ -1,0 +1,17 @@
+---
+title: "00_Overview"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (4 Clases y Objetos)](../04_Classes_objects/00_Overview.Rmd) \| [Próximo (6 Generadores)](../06_Generators/00_Overview.Rmd)
+
+# 5. Funcionamiento interno de los objetos de Python
+
+Esta sección cubre algunos de los funcionamientos internos de los objetos de Python. Los programadores que vienen de otros lenguajes de programación a menudo encuentran que la noción de clases de Python carece de características. Por ejemplo, no hay noción de control de acceso (p. ej., privado, protegido), todo el argumento `self` se siente extraño y, francamente, trabajar con objetos a veces se siente como un "vale para todos". Tal vez eso sea cierto, pero descubriremos cómo funciona todo, así como algunos modismos de programación comunes para encapsular mejor los aspectos internos de los objetos.
+
+No es necesario preocuparse por los detalles internos para ser productivo. Sin embargo, la mayoría de los programadores de Python tienen un conocimiento básico de cómo funcionan las clases. Por eso lo cubriremos.
+
+-   [5.1 Revisión de diccionarios (Implementación de objetos)](01_Dicts_revisited.md)
+-   [5.2 Técnicas de encapsulación](02_Classes_encapsulation.md)
+
+[Contenido](../Contents.Rmd) \| [Anterior (4 Clases y Objetos)](../04_Classes_objects/00_Overview.Rmd) \| [Próximo (6 Generadores)](../06_Generators/00_Overview.Rmd)

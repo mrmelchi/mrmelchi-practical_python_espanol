@@ -1,0 +1,361 @@
+---
+title: "06_List_comprehension"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+[Contenido](../Contenido.md) \| [Anterior (2.5
+Colecciones)](05_Collections.md) \| [Siguiente (2.7
+Objetos)](07_Objects.md)
+
+### 2.6 Listas por comprensión
+
+Una tarea común es procesar elementos de una lista. Esta sección
+presenta las listas por comprensión, una herramienta poderosa para hacer
+precisamente eso.
+
+#### Creando nuevas listas
+
+Una lista por comprensión crea una nueva lista aplicando una operación a
+cada elemento de una secuencia.
+
+``` python
+>>> a = [1, 2, 3, 4, 5]
+>>> b = [2*x for x in a ]
+>>> b
+[2, 4, 6, 8, 10]
+>>>
+```
+
+Otro ejemplo:
+
+``` python
+>>> a = [1, 2, 3, 4, 5]
+>>> b = [2*x for x in a ]
+>>> b
+[2, 4, 6, 8, 10]
+>>>
+```
+
+La sintaxis general es:
+`[ <expresión> for <nombre_de_variable> in <secuencia> ]`.
+
+#### Filtrado
+
+También puedes filtrar durante la listas por comprensión.
+
+``` python
+>>> a = [1, -5, 4, 2, -2, 10]
+>>> b = [2*x for x in a if x > 0 ]
+>>> b
+[2, 8, 4, 20]
+>>>
+```
+
+#### Casos de uso
+
+Las listas por comprensión son muy útiles. Por ejemplo, puede recopilar
+valores de un campo de diccionario específico:
+
+``` python
+stocknames = [s['name'] for s in stocks]
+```
+
+Puede realizar consultas similares a bases de datos en secuencias.
+
+``` python
+a = [s for s in stocks if s['price'] > 100 and s['shares'] > 50 ]
+```
+
+También puedes combinar una lista por comprensión con una reducción de
+secuencia:
+
+``` python
+cost = sum([s['shares']*s['price'] for s in stocks])
+```
+
+#### Sintaxis general
+
+``` code
+[ <expresión> for <nombre_de_variable> in <secuencia> if <condición>]
+```
+
+lo que significa:
+
+``` python
+result = []
+for nombre_de_variable in secuencia:
+    if condición:
+        result.append(expresión)
+```
+
+#### Digresión histórica
+
+Las listas por comprensión provienen de las matemáticas (notación de
+construcción de conjuntos).
+
+``` code
+a = [ x * x for x in s if x > 0 ] # Python
+
+a = { x^2 | x ∈ s, x > 0 }         # Matemática
+```
+
+También está implementado en varios otros lenguajes. Aunque la mayoría
+de los programadores probablemente no estén pensando en sus clases de
+matemáticas. No obstante, está bien verlo como un interesante atajo para
+crear listas.
+
+#### Ejercicios
+
+Comience ejecutando su programa `report.py` para que tenga la Cartera de
+acciones cargadas en el modo interactivo.
+
+``` bash
+bash % python3 -i report.py
+```
+
+Ahora, en modo interactivo de Python, escriba instrucciones para
+realizar la operaciones que se describen a continuación. Estas
+operaciones realizan varios tipos de reducciones de datos,
+transformaciones y consultas sobre los datos de la cartera.
+
+##### Ejercicio 2.19: Comprensión de listas
+
+Pruebe algunas listas por comprensión simples solo para familiarizarse
+con la sintaxis.
+
+``` python
+>>> nums = [1,2,3,4]
+>>> squares = [ x * x for x in nums ]
+>>> squares
+[1, 4, 9, 16]
+>>> twice = [ 2 * x for x in nums if x > 2 ]
+>>> twice
+[6, 8]
+>>>
+```
+
+Observe cómo las listas por comprensión crean una nueva lista con los
+datos adecuadamente transformados o filtrados.
+
+##### Ejercicio 2.20: Reducciones de secuencias
+
+Calcule el costo total de la cartera utilizando una única declaración de
+Python.
+
+``` python
+>>> portfolio = read_portfolio('Data/portfolio.csv')
+>>> cost = sum([ s['shares'] * s['price'] for s in portfolio ])
+>>> cost
+44671.15
+>>>
+```
+
+Después de haber hecho esto, muestra cómo puedes calcular el valor
+actual. de la cartera mediante un único enunciado.
+
+``` python
+>>> value = sum([ s['shares'] * prices[s['name']] for s in portfolio ])
+>>> value
+28686.1
+>>>
+```
+
+Ambas operaciones anteriores son un ejemplo de reducción de mapa. Las
+listas por comprensión consisten en mapear una operación a lo largo de
+la lista.
+
+``` python
+>>> [ s['shares'] * s['price'] for s in portfolio ]
+[3220.0000000000005, 4555.0, 12516.0, 10246.0, 3835.1499999999996, 3254.9999999999995, 7044.0]
+>>>
+```
+
+La función `sum()` realiza entonces una reducción en el resultado:
+
+``` python
+>>> sum(_)
+44671.15
+>>>
+```
+
+Con este conocimiento, ahora estás listo para lanzar una empresa
+emergente de big data.
+
+##### Ejercicio 2.21: Consultas de datos
+
+Pruebe los siguientes ejemplos de varias consultas de datos.
+
+En primer lugar, una lista de todas las tenencias de cartera con más de
+100 acciones.
+
+``` python
+>>> more100 = [ s for s in portfolio if s['shares'] > 100 ]
+>>> more100
+[{'price': 83.44, 'name': 'CAT', 'shares': 150}, {'price': 51.23, 'name': 'MSFT', 'shares': 200}]
+>>>
+```
+
+Todas las tenencias de cartera de acciones de MSFT e IBM.
+
+``` python
+>>> msftibm = [ s for s in portfolio if s['name'] in {'MSFT','IBM'} ]
+>>> msftibm
+[{'price': 91.1, 'name': 'IBM', 'shares': 50}, {'price': 51.23, 'name': 'MSFT', 'shares': 200},
+  {'price': 65.1, 'name': 'MSFT', 'shares': 50}, {'price': 70.44, 'name': 'IBM', 'shares': 100}]
+>>>
+```
+
+Una lista de todas las tenencias de acciones que cuestan más de \$10000.
+
+``` python
+>>> cost10k = [ s for s in portfolio if s['shares'] * s['price'] > 10000 ]
+>>> cost10k
+[{'price': 83.44, 'name': 'CAT', 'shares': 150}, {'price': 51.23, 'name': 'MSFT', 'shares': 200}]
+>>>
+```
+
+##### Ejercicio 2.22: Extracción de datos
+
+Muestra cómo podrías construir una lista de tuplas `(nombre, acciones)`
+donde `name` y `shares` se toman de `cartera`.
+
+``` python
+>>> name_shares =[ (s['name'], s['shares']) for s in portfolio ]
+>>> name_shares
+[('AA', 100), ('IBM', 50), ('CAT', 150), ('MSFT', 200), ('GE', 95), ('MSFT', 50), ('IBM', 100)]
+>>>
+```
+
+Si cambias los corchetes (`[`,`]`) por llaves (`{`, `}`), obtienes algo
+conocido como comprensión de conjunto. Esto le proporciona valores
+únicos o distintos.
+
+Por ejemplo, esto determina el conjunto de nombres de acciones únicos
+que aparecen en `portafolio`:
+
+``` python
+>>> names = { s['name'] for s in portfolio }
+>>> names
+{ 'AA', 'GE', 'IBM', 'MSFT', 'CAT' }
+>>>
+```
+
+Si especifica pares `clave:valor`, puede crear un diccionario. Por
+ejemplo, crear un diccionario que asigne el nombre de una acción al
+número total de acciones que posee.
+
+``` python
+>>> holdings = { name: 0 for name in names }
+>>> holdings
+{'AA': 0, 'GE': 0, 'IBM': 0, 'MSFT': 0, 'CAT': 0}
+>>>
+```
+
+Esta última característica se conoce como **diccionario por
+comprensión**. Vamos a tabular:
+
+``` python
+>>> for s in portfolio:
+        holdings[s['name']] += s['shares']
+
+>>> holdings
+{ 'AA': 100, 'GE': 95, 'IBM': 150, 'MSFT':250, 'CAT': 150 }
+>>>
+```
+
+Pruebe este ejemplo que filtra el diccionario de `prices` solo a
+aquellos nombres que aparecen en la cartera:
+
+``` python
+>>> portfolio_prices = { name: prices[name] for name in names }
+>>> portfolio_prices
+{'AA': 9.22, 'GE': 13.48, 'IBM': 106.28, 'MSFT': 20.89, 'CAT': 35.46}
+>>>
+```
+
+##### Ejercicio 2.23: Extracción de datos de archivos CSV
+
+Saber cómo utilizar diversas combinaciones de listas, conjuntos y
+diccionarios puede ser útil en diversas formas de procesamiento de
+datos. A continuación se muestra un ejemplo que muestra cómo extraer
+columnas seleccionadas de un archivo CSV.
+
+Primero, lea una fila de información de encabezado de un archivo CSV:
+
+``` python
+>>> import csv
+>>> f = open('Data/portfoliodate.csv')
+>>> rows = csv.reader(f)
+>>> headers = next(rows)
+>>> headers
+['name', 'date', 'time', 'shares', 'price']
+>>>
+```
+
+A continuación, defina una variable que enumere las columnas que
+realmente le interesan:
+
+``` python
+>>> select = ['name', 'shares', 'price']
+>>>
+```
+
+Ahora, ubique los índices de las columnas anteriores en el archivo CSV
+de origen:
+
+``` python
+>>> indices = [ headers.index(colname) for colname in select ]
+>>> indices
+[0, 3, 4]
+>>>
+```
+
+Por último, lea una fila de datos y conviértala en un diccionario
+utilizando un diccionario por comprensión:
+
+``` python
+>>> row = next(rows)
+>>> record = { colname: row[index] for colname, index in zip(select, indices) }   # dict-comprehension
+>>> record
+{'price': '32.20', 'name': 'AA', 'shares': '100'}
+>>>
+```
+
+Si te sientes cómodo con lo que acaba de pasar, lee el resto del
+archivo:
+
+``` python
+>>> portfolio = [ { colname: row[index] for colname, index in zip(select, indices) } for row in rows ]
+>>> portfolio
+[{'price': '91.10', 'name': 'IBM', 'shares': '50'}, {'price': '83.44', 'name': 'CAT', 'shares': '150'},
+  {'price': '51.23', 'name': 'MSFT', 'shares': '200'}, {'price': '40.37', 'name': 'GE', 'shares': '95'},
+  {'price': '65.10', 'name': 'MSFT', 'shares': '50'}, {'price': '70.44', 'name': 'IBM', 'shares': '100'}]
+>>>
+```
+
+Vaya, acabas de reducir gran parte de la función `read_portfolio()` a
+una sola declaración.
+
+#### Comentario
+
+Las listas por comprensión se utilizan comúnmente en Python como un
+medio eficiente para transformar, filtrar o recopilar datos. Debido a la
+sintaxis, no conviene exagerar: intenta que cada lista por comprensión
+sea lo más simple posible. Está bien dividir las cosas en varios pasos.
+Por ejemplo, no está claro que usted quiera soltar ese último ejemplo
+ante sus desprevenidos compañeros de trabajo.
+
+Dicho esto, saber cómo manipular datos rápidamente es una habilidad
+increíblemente útil. Existen numerosas situaciones en las que podría ser
+necesario resolver algún tipo de problema puntual relacionado con la
+importación, exportación, extracción de datos, etc. Convertirse en un
+maestro de las listas por comprensión puede reducir sustancialmente el
+tiempo empleado en idear una solución. Además, no te olvides del módulo
+`collections`.
+
+[Contenido](../Contents.Rmd) \| [Anterior (2.5 Módulo
+Collections)](05_Collections.Rmd) \| [Siguiente (2.7 Modelo de
+objetos)](07_Objects.Rmd)

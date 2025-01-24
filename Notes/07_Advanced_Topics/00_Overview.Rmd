@@ -1,0 +1,20 @@
+---
+title: "00_Overview"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (6 Generadores)](../06_Generators/00_Overview.Rmd) \| [Próximo (8. Pruebas, registro y depuración)](../08_Testing_debugging/00_Overview.Rmd)
+
+### 7. Algunos temas avanzados
+
+En esta sección, analizamos un pequeño conjunto de características de Python un poco más avanzadas que puede encontrar en su codificación diaria. Muchos de estos temas podrían haberse tratado en secciones anteriores del curso, pero no lo hicimos para ahorrarle más dolores de cabeza en ese momento.
+
+Se debe enfatizar que los temas de esta sección solo están destinados a servir como una introducción muy básica a estas ideas. Deberá buscar material más avanzado para completar los detalles.
+
+-   [7.1 Funciones con argumentos variables](01_Variable_arguments.Rmd)
+-   [7.2 Funciones anónimas y lambda](02_Anonymous_function.Rmd)
+-   [7.3 Retornando Funciones y clousures](03_Returning_functions.Rmd)
+-   [7.4 Decoradores de funciones](04_Function_decorators.Rmd)
+-   [7.5 Métodos estáticos y de clase](05_Decorated_methods.Rmd)
+
+[Contenido](../Contents.Rmd) \| [Anterior (6 Generadores)](../06_Generators/00_Overview.Rmd) \| [Próximo (8. Pruebas, registro y depuración)](../08_Testing_debugging/00_Overview.Rmd)

@@ -1,0 +1,26 @@
+---
+title: "00_Overview"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (1. Introducción a Python)](../01_Introduction/00_Overview.Rmd) \| [Próximo (3. Organización del programa)](../03_Program_organization/00_Overview.Rmd)
+
+## 2. Trabajar con datos
+
+Para escribir programas útiles, es necesario saber trabajar con datos. Esta sección presenta las estructuras de datos centrales de Python: tuplas, listas, conjuntos y diccionarios, y analiza los lenguajes comunes de manejo de datos. La última parte de esta sección profundiza un poco más en el modelo de objetos subyacente de Python.
+
+-   [2.1 Tipos y estructuras de datos](01_Datatypes.md)
+
+-   [2.2 Contenedores](02_Containers.md)
+
+-   [2.3 Salida con formato](03_Formatting.md)
+
+-   [2.4 Secuencias](04_Sequences.md)
+
+-   [2.5 Módulo Collections](05_Collections.md)
+
+-   [2.6 Listas por comprensión](06_List_comprehension.md)
+
+-   [2.7 Objetos](07_Objects.md)
+
+[Contenido](../Contents.Rmd) \| [Anterior (1. Introducción a Python)](../01_Introduction/00_Overview.Rmd) \| [Próximo (3. Organización del programa)](../03_Program_organization/00_Overview.Rmd)

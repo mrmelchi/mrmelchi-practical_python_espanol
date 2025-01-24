@@ -1,0 +1,263 @@
+---
+title: "01_Testing"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (7.5 Métodos estáticos y de clase)](../07_Advanced_Topics/05_Decorated_methods.Rmd) \| [Próximo (8.2 Logging)](02_Logging.Rmd)
+
+### 8.1 Pruebas
+
+#### Las pruebas son geniales, la depuración es un asco
+
+La naturaleza dinámica de Python hace que las pruebas sean de vital importancia para la mayoría de las aplicaciones. No hay ningún compilador que encuentre errores. La única forma de encontrarlos es ejecutar el código y asegurarse de probar todas sus funciones.
+
+#### Afirmaciones
+
+La declaración `assert` es una verificación interna del programa. Si una expresión no es verdadera, genera una excepción `AssertionError`.
+
+Sintaxis de la declaración `assert`.
+
+```python
+assert <expresiónn> [, 'Mensaje de diagnóstico']
+```
+
+Por ejemplo.
+
+```python
+assert isinstance(10, int), 'Int esperado'
+```
+
+No debería usarse para verificar la entrada del usuario (es decir, los datos ingresados en un formulario web o algo así). Su propósito es más para verificaciones internas e invariantes (condiciones que siempre deben ser verdaderas).
+
+#### Programación por contrato
+
+También conocida como Diseño por contrato, el uso liberal de aserciones es un enfoque para diseñar software. Prescribe que los diseñadores de software deben definir especificaciones de interfaces precisas para los componentes del software.
+
+Por ejemplo, puede colocar aserciones en todas las entradas de una función.
+
+```python
+def add(x, y):
+    assert isinstance(x, int), 'Espera un int'
+    assert isinstance(y, int), 'Espera un int'
+    return x + y
+```
+
+Al verificar las entradas, se detectarán inmediatamente los invocadores que no estén usando los argumentos adecuados.
+
+```python
+>>> add(2, 3)
+5
+>>> add('2', '3')
+Traceback (most recent call last):
+...
+AssertionError: Esperado un int
+>>>
+```
+
+#### Pruebas en línea
+
+Las afirmaciones también se pueden usar para pruebas simples.
+
+```python
+def add(x, y):
+    return x + y
+
+assert add(2,2) == 4
+```
+
+De esta manera, está incluyendo la prueba en el mismo módulo que su código.
+
+*Beneficio: si el código está claramente dañado, los intentos de importar el módulo fallarán.*
+
+Esto no se recomienda para pruebas exhaustivas. Es más bien una "prueba de humo" básica. ¿Funciona la función en algún ejemplo? Si no, entonces algo está definitivamente dañado.
+
+#### Módulo `unittest`
+
+Supongamos que tiene un código.
+
+```python
+# simple.py
+
+def add(x, y):
+    return x + y
+```
+
+Ahora, supongamos que desea probarlo. Cree un archivo de prueba independiente como este.
+
+```python
+# test_simple.py
+
+import simple
+import unittest
+```
+
+Luego defina una clase de prueba.
+
+```python
+# test_simple.py
+
+import simple
+import unittest
+
+# Observe que hereda de unittest.TestCase
+class TestAdd(unittest.TestCase):
+    ...
+```
+
+La clase de prueba debe heredar de `unittest.TestCase`.
+
+En la clase de prueba, se definen los métodos de prueba.
+
+```python
+# test_simple.py
+
+import simple
+import unittest
+
+# Observe que hereda de unittest.TestCase
+class TestAdd(unittest.TestCase):
+    def test_simple(self):
+        # Prueba con argumentos enteros simples
+        r = simple.add(2, 2)
+        self.assertEqual(r, 5)
+        
+    def test_str(self):
+        # Prueba con cadenas
+        r = simple.add('hello', 'world')
+        self.assertEqual(r, 'helloworld')
+```
+
+*Importante: Cada método debe comenzar con `test`.
+
+#### Uso de `unittest`
+
+Hay varias afirmaciones integradas que vienen con `unittest`. Cada una de ellas afirma algo diferente.
+
+```python
+# Afirmar que expr es True
+self.assertTrue(expr)
+
+# Afirmar que x == y
+self.assertEqual(x,y)
+
+# Afirmar que x != y
+self.assertNotEqual(x,y)
+
+# Afirmar que x está cerca de y
+self.assertAlmostEqual(x,y,places)
+
+# Afirmar que callable(arg1,arg2,...) genera exc
+self.assertRaises(exc, callable, arg1, arg2, ...)
+```
+
+Esta no es una lista exhaustiva. Hay otras afirmaciones en el módulo.
+
+#### Ejecutar `unittest`
+
+Para ejecutar las pruebas, convierta el código en un script.
+
+```python
+# test_simple.py
+
+...
+
+if __name__ == '__main__':
+    unittest.main()
+```
+
+Luego, ejecute Python en el archivo de prueba.
+
+```bash
+bash % python test_simple.py
+F.
+=========================================================
+FAIL: test_simple (__main__.TestAdd)
+--------------------------------------------------------
+Traceback (most recent call last):
+File "testsimple.py", line 8, in test_simple
+self.assertEqual(r, 5)
+AssertionError: 4 != 5
+--------------------------------------------------------
+Ran 2 tests in 0.000s
+FAILED (failures=1)
+```
+
+#### Comentario
+
+La realización de pruebas unitarias efectivas es un arte y puede volverse bastante complicada para aplicaciones grandes.
+
+El módulo `unittest` tiene una gran cantidad de opciones relacionadas con los ejecutores de pruebas, la recopilación de resultados y otros aspectos de las pruebas. Consulta la documentación para obtener más detalles.
+
+#### Herramientas de prueba de terceros
+
+El módulo `unittest` integrado tiene la ventaja de estar disponible en todas partes: es parte de Python. Sin embargo, muchos programadores también lo consideran bastante detallado. Una alternativa popular es [pytest](https://docs.pytest.org/en/latest/). Con pytest, tu archivo de prueba se simplifica a algo como lo siguiente:
+
+```python
+# test_simple.py
+import simple
+
+def test_simple():
+    assert simple.add(2,2) == 4
+
+def test_str():
+    assert simple.add('hello','world') == 'helloworld'
+```
+
+Para ejecutar las pruebas, simplemente escriba un comando como `python -m pytest`. Descubrirá todas las pruebas y las ejecutará.
+
+`pytest` es mucho más que este ejemplo, pero suele ser bastante fácil comenzar si decide probarlo.
+
+#### Ejercicios
+
+En este ejercicio, explorará la mecánica básica del uso del módulo `unittest` de Python.
+
+En ejercicios anteriores, escribió un archivo `stock.py` que contenía una clase `Stock`. Para este ejercicio, se asumió que está usando el código escrito para [Ejercicio 7.9](../07_Advanced_Topics/03_Returning_functions) que involucra propiedades tipificadas. Si, por alguna razón, eso no funciona, es posible que desee copiar la solución de `Soluciones/7_9` a su directorio de trabajo.
+
+##### Ejercicio 8.1: Escritura de pruebas unitarias
+
+En un archivo separado `test_stock.py`, escribe un conjunto de pruebas unitarias para la clase `Stock`. Para comenzar, aquí tienes un pequeño fragmento de código que prueba la creación de instancias:
+
+```python
+# test_stock.py
+
+import unittest
+import stock
+
+class TestStock(unittest.TestCase):
+    def test_create(self):
+        s = stock.Stock('GOOG', 100, 490.1)
+        self.assertEqual(s.name, 'GOOG')
+        self.assertEqual(s.shares, 100)
+        self.assertEqual(s.price, 490.1)
+
+if __name__ == '__main__':
+    unittest.main()
+```
+
+Ejecuta tus pruebas unitarias. Deberías obtener un resultado similar a este:
+```
+.
+----------------------------------------------------------------------
+Ran 1 tests in 0.000s
+
+OK
+```
+
+Una vez que esté satisfecho con el funcionamiento, escriba pruebas unitarias adicionales que verifiquen lo siguiente:
+
+- Asegúrese de que la propiedad `s.cost` devuelva el valor correcto (49010.0)
+- Asegúrese de que el método `s.sell()` funcione correctamente. Debería disminuir el valor de `s.shares` en consecuencia.
+- Asegúrese de que el atributo `s.shares` no se pueda configurar en un valor que no sea entero.
+
+Para la última parte, deberá verificar que se genere una excepción. Una forma sencilla de hacerlo es con un código como este:
+
+```python
+class TestStock(unittest.TestCase):
+    ...
+    def test_bad_shares(self):
+        s = stock.Stock('GOOG', 100, 490.1)
+        with self.assertRaises(TypeError):
+            s.shares = '100'
+```
+
+[Contenido](../Contents.Rmd) \| [Anterior (7.5 Métodos estáticos y de clase)](../07_Advanced_Topics/05_Decorated_methods.Rmd) \| [Próximo (8.2 Logging)](02_Logging.Rmd)

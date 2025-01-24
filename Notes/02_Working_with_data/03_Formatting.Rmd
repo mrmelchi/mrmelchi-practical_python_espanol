@@ -1,0 +1,332 @@
+---
+title: "03_Formatting"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (2.2
+Contenedores)](02_Containers.Rmd) \| [Próximo (2.4
+Secuencias)](04_Sequences.Rmd)
+
+### 2.3 Formato
+
+Esta sección es una ligera digresión, pero cuando se trabaja con datos,
+a menudo se desea producir resultados estructurados (tablas, etc.). Por
+ejemplo:
+
+``` code
+      Name      Shares        Price
+----------  ----------  -----------
+        AA         100        32.20
+       IBM          50        91.10
+       CAT         150        83.44
+      MSFT         200        51.23
+        GE          95        40.37
+      MSFT          50        65.10
+       IBM         100        70.44
+```
+
+#### Formato de cadena
+
+Una forma de formatear cadenas en Python 3.6+ es con `f-strings`.
+
+``` python
+>>> name = 'IBM'
+>>> shares = 100
+>>> price = 91.1
+>>> f'{name:>10s} {shares:>10d} {price:>10.2f}'
+'       IBM        100      91.10'
+>>>
+```
+
+Se reemplaza la parte `{expression:format}`.
+
+Se utiliza comúnmente con `print`.
+
+``` python
+print(f'{name:>10s} {shares:>10d} {price:>10.2f}')
+```
+
+### Códigos de formato
+
+Los códigos de formato (después del `:` dentro de `{}`) son similares a
+`printf()` de C. Los códigos comunes incluyen:
+
+``` code
+d       Decimal entero
+b       Binary entero
+x       Hexadecimal entero
+f       Float como [-]m.dddddd
+e       Float como [-]m.dddddde+-xx
+g       Float, pero selectivo uso de la notación E
+s       String
+c       Character (desde entero)
+```
+
+Los modificadores comunes ajustan el ancho del campo y la precisión
+decimal. Esta es una lista parcial:
+
+``` code
+:>10d Entero alineado a la derecha en un campo de 10 caracteres
+:<10d Entero alineado a la izquierda en un campo de 10 caracteres
+:^10d Entero centrado en un campo de 10 caracteres
+:0.2f Flotante con precisión de 2 dígitos
+```
+
+### Formato del diccionario
+
+Puede utilizar el método `format_map()` para aplicar formato de cadena a
+un diccionario de valores:
+
+``` python
+>>> s = {
+    'name': 'IBM',
+    'shares': 100,
+    'price': 91.1
+}
+>>> '{name:>10s} {shares:10d} {price:10.2f}'.format_map(s)
+'       IBM        100      91.10'
+>>>
+```
+
+Utiliza los mismos códigos que `f-strings` pero toma los valores del
+diccionario suministrado.
+
+#### Método format()
+
+Hay un método `format()` que puede aplicar formato a argumentos o
+argumentos de palabras clave.
+
+``` python
+>>> '{name:>10s} {shares:10d} {price:10.2f}'.format(name='IBM', shares=100, price=91.1)
+'       IBM        100      91.10'
+>>> '{:>10s} {:10d} {:10.2f}'.format('IBM', 100, 91.1)
+'       IBM        100      91.10'
+>>>
+```
+
+Francamente, `format()` es un poco verborrágico. Prefiero las
+`f-strngs`.
+
+#### Formato estilo C
+
+También puede utilizar el operador de formato `%`.
+
+``` python
+>>> 'The value is %d' % 3
+'The value is 3'
+>>> '%5d %-5d %10d' % (3,4,5)
+'    3 4              5'
+>>> '%0.2f' % (3.1415926,)
+'3.14'
+```
+
+Esto requiere un solo elemento o una tupla a la derecha. Los códigos de
+formato también se modelan según `printf()` de C.
+
+*Nota: Este es el único formato disponible en cadenas de bytes.*
+
+``` python
+>>> b'%s tiene %d mensajes' % (b'Dave', 37)
+b'Dave tiene 37 mensajes
+>>> b'%b tiene %d mensajes' % (b'Dave', 37) # %b se puede usar en lugar de %s
+b'Dave tiene 37 mensajes
+>>>
+```
+
+#### Ejercicios
+
+##### Ejercicio 2.8: Cómo formatear números
+
+Un problema común con la impresión de números es especificar el número
+de decimales. Una forma de solucionar esto es utilizar `f-strings`.
+Pruebe estos ejemplos:
+
+``` python
+>>> value = 42863.1
+>>> print(value)
+42863.1
+>>> print(f'{value:0.4f}')
+42863.1000
+>>> print(f'{value:>16.2f}')
+        42863.10
+>>> print(f'{value:<16.2f}')
+42863.10
+>>> print(f'{value:*>16,.2f}')
+*******42,863.10
+>>>
+```
+
+La documentación completa sobre los códigos de formato utilizados en
+`f-strings` se puede encontrar
+[aquí](https://docs.python.org/3/library/string.html#format-specification-mini-language).
+El formateo también se realiza a veces utilizando el operador `%` de
+cadenas.
+
+``` python
+>>> print('%0.4f' % value)
+42863.1000
+>>> print('%16.2f' % value)
+        42863.10
+>>>
+```
+
+La documentación sobre varios códigos utilizados con `%` se puede
+encontrar [aquí]
+(<https://docs.python.org/3/library/stdtypes.html#printf-style-string-formatting>).
+
+Aunque se usa comúnmente con `print`, el formato de cadena no está
+vinculado a la impresión. Si desea guardar una cadena formateada.
+Simplemente asígnelo a una variable.
+
+``` python
+>>> f = '%0.4f' % value
+>>> f
+'42863.1000'
+>>>
+```
+
+##### Ejercicio 2.9: Recopilación de datos
+
+En el ejercicio 2.7, escribió un programa llamado `report.py` que
+calculó la ganancia/pérdida de una cartera de acciones. En este
+ejercicio, comenzarás a modificarlo para producir una tabla como esta:
+
+```         
+      Name     Shares      Price     Change
+---------- ---------- ---------- ----------
+        AA        100       9.22     -22.98
+       IBM         50     106.28      15.18
+       CAT        150      35.46     -47.98
+      MSFT        200      20.89     -30.34
+        GE         95      13.48     -26.89
+      MSFT         50      20.89     -44.21
+       IBM        100     106.28      35.84
+```
+
+En este informe, `Price` es el precio actual de la acción y `Change` es
+el cambio en el precio de la acción respecto del precio de compra
+inicial.
+
+Para generar el informe anterior, primero deberá recopilar todos los
+datos que se muestran en la tabla. Escriba una función `make_report()`
+que tome una lista de acciones y un diccionario de precios como entrada
+y devuelva una lista de tuplas que contengan las filas de la tabla
+anterior.
+
+Agregue esta función a su archivo `report.py`. Así es como debería
+funcionar si lo intentas de forma interactiva:
+
+``` python
+>>> portfolio = read_portfolio('Data/portfolio.csv')
+>>> prices = read_prices('Data/prices.csv')
+>>> report = make_report(portfolio, prices)
+>>> for r in report:
+        print(r)
+
+('AA', 100, 9.22, -22.980000000000004)
+('IBM', 50, 106.28, 15.180000000000007)
+('CAT', 150, 35.46, -47.98)
+('MSFT', 200, 20.89, -30.339999999999996)
+('GE', 95, 13.48, -26.889999999999997)
+...
+>>>
+```
+
+##### Ejercicio 2.10: Impresión de una tabla formateada
+
+Rehaga el bucle for del Ejercicio 2.9, pero cambie la declaración de
+impresión para formatear las tuplas.
+
+``` python
+>>> for r in report:
+        print('%10s %10d %10.2f %10.2f' % r)
+
+          AA        100       9.22     -22.98
+         IBM         50     106.28      15.18
+         CAT        150      35.46     -47.98
+        MSFT        200      20.89     -30.34
+...
+>>>
+```
+
+También puedes expandir los valores y utilizar `cadenas f`f-strngs\`.
+Por ejemplo:
+
+``` python
+>>> for name, shares, price, change in report:
+        print(f'{name:>10s} {shares:>10d} {price:>10.2f} {change:>10.2f}')
+
+          AA        100       9.22     -22.98
+         IBM         50     106.28      15.18
+         CAT        150      35.46     -47.98
+        MSFT        200      20.89     -30.34
+...
+>>>
+```
+
+Tome las declaraciones anteriores y agréguelas a su programa
+`report.py`. Haga que su programa tome la salida de la función
+`make_report()` e imprima una tabla bien formateada como se muestra.
+
+##### Ejercicio 2.11: Agregar algunos encabezados
+
+Supongamos que tienes una tupla de nombres de encabezado como éste:
+
+``` python
+headers = ('Name', 'Shares', 'Price', 'Change')
+```
+
+Agregue código a su programa que tome la tupla de encabezados anterior y
+cree una cadena donde cada nombre de encabezado esté alineado a la
+derecha en un campo de 10 caracteres de ancho y cada campo esté separado
+por un solo espacio.
+
+``` python
+'      Name     Shares      Price      Change'
+```
+
+Escriba el código que tome los encabezados y cree la cadena separadora
+entre los encabezados y los datos a seguir. Esta cadena es solo un
+conjunto de caracteres "-" debajo de cada nombre de campo. Por ejemplo:
+
+\`\`pitón '---------- ---------- ---------- -----------'
+
+```         
+
+Cuando haya terminado, su programa debería producir la tabla que se
+muestra en la parte superior de este ejercicio.
+```
+
+|         Name |      Shares |       Price | Change |
+|-------------:|------------:|------------:|-------:|
+|           AA |         100 |        9.22 | -22.98 |
+|          IBM |          50 |      106.28 |  15.18 |
+|          CAT |         150 |       35.46 | -47.98 |
+|         MSFT |         200 |       20.89 | -30.34 |
+|           GE |          95 |       13.48 | -26.89 |
+|         MSFT |          50 |       20.89 | -44.21 |
+|          IBM |         100 |      106.28 |  35.84 |
+|       \`\`\` |             |             |        |
+| \### Ejercic | io 2.12: De | safío de fo |  rmato |
+
+¿Cómo modificarías tu código para que el precio incluya el símbolo de
+moneda (\$) y el resultado se vea así:
+
+```         
+      Name     Shares      Price     Change
+---------- ---------- ---------- ----------
+        AA        100      $9.22     -22.98
+       IBM         50    $106.28      15.18
+       CAT        150     $35.46     -47.98
+      MSFT        200     $20.89     -30.34
+        GE         95     $13.48     -26.89
+      MSFT         50     $20.89     -44.21
+       IBM        100    $106.28      35.84
+```
+
+[Contenido](../Contents.Rmd) \| [Anterior (2.2
+Contenedores)](02_Containers.Rmd) \| [Próximo (2.4
+Secuencias)](04_Sequences.Rmd)

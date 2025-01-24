@@ -3,3 +3,14 @@ title: "00_Overview"
 output: html_document
 ---
 
+[Contenido](../Contents.Rmd) \| [Anterior (7. Algunos temas avanzados)](../07_Advanced_Topics/00_Overview.Rmd) \| [Próximo (9. Paquetes)](../09_Packages/00_Overview.Rmd)
+
+### 8. Pruebas y depuración
+
+Esta sección presenta algunos temas básicos relacionados con las pruebas, el registro y la depuración.
+
+-   [8.1 Pruebas](01_Testing.Rmd)
+-   [8.2 Registro, manejo de errores y diagnósticos](02_Logging.Rmd)
+-   [8.3 Depuración](03_Debugging.Rmd)
+
+[Contenido](../Contents.Rmd) \| [Anterior (7. Algunos temas avanzados)](../07_Advanced_Topics/00_Overview.Rmd) \| [Próximo (9. Paquetes)](09_Packages/00_Overview.Rmd)

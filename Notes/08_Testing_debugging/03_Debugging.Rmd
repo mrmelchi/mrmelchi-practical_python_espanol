@@ -1,0 +1,162 @@
+---
+title: "03_Debugging"
+output: html_document
+---
+
+[Contenido](../Contents.Rmd) \| [Anterior (8.2 Registro, manejo de errores y diagnósticos)](02_Logging.Rmd) \| [Próximo (9 Paquetes)](../09_Packages/00_Overview.Rmd)
+
+### 8.3 Depuración
+
+#### Consejos de depuración
+
+Entonces, su programa se ha bloqueado...
+
+``` bash
+bash % python blah.py
+Traceback (última llamada más reciente):
+Archivo "blah.py", línea 13, en ?
+foo()
+Archivo "blah.py", línea 10, en foo
+bar()
+Archivo "blah.py", línea 7, en bar
+spam()
+Archivo "blah.py", 4, en spam
+línea x.append(3)
+AttributeError: el objeto 'int' no tiene el atributo 'append'
+```
+
+¿Y ahora qué?!
+
+#### Lectura de los tracebacks
+
+La última línea es la causa específica del fallo.
+
+``` bash
+bash % python blah.py
+Traceback (most recent call last):
+Archivo "blah.py", línea 13, en ?
+foo()
+Archivo "blah.py", línea 10, en foo
+bar()
+Archivo "blah.py", línea 7, en bar
+spam()
+Archivo "blah.py", 4, en spam
+línea x.append(3)
+# Causa del fallo
+AttributeError: el objeto 'int' no tiene el atributo 'append'
+```
+
+Sin embargo, no siempre es fácil de leer o comprender.
+
+*CONSEJO PROFESIONAL: Pegue el traceback completo en Google.*
+
+#### Uso del REPL
+
+Use la opción `-i` para mantener Python activo al ejecutar un script.
+
+``` bash
+bash % python -i blah.py
+Traceback (most recent call last):
+Archivo "blah.py", línea 13, en ?
+foo()
+Archivo "blah.py", línea 10, en foo
+bar()
+Archivo "blah.py", línea 7, en bar
+spam()
+Archivo "blah.py", 4, en spam
+línea x.append(3)
+AttributeError: el objeto 'int' no tiene el atributo 'append'
+>>>
+```
+
+Conserva el estado del intérprete. Eso significa que puede seguir investigando después de la falla. Verificando los valores de las variables y otros estados.
+
+#### Depuración con Print
+
+La depuración con `print()` es bastante común.
+
+*Consejo: asegúrate de usar `repr()`*
+
+``` python
+def spam(x):
+    print('DEBUG:', repr(x))
+    ...
+```
+
+`repr()` te muestra una representación precisa de un valor. No la *buena* salida impresa.
+
+``` python
+>>> from decimal import Decimal
+>>> x = Decimal('3.4')
+# SIN `repr`
+>>> print(x)
+3.4
+# CON `repr`
+>>> print(repr(x))
+Decimal('3.4')
+>>>
+```
+
+#### El depurador de Python
+
+Puedes iniciar manualmente el depurador dentro de un programa.
+
+``` python
+def some_function():
+    ...
+    breakpoint() # Ingresa al depurador (Python 3.7+)
+    ...
+```
+
+Esto inicia el depurador en la llamada `breakpoint()`.
+
+En versiones anteriores de Python, esto se hacía. A veces verás que se menciona esto en otras guías de depuración.
+
+``` python
+import pdb
+...
+pdb.set_trace() # En lugar de `breakpoint()`
+...
+```
+
+#### Ejecutar bajo el depurador
+
+También puedes ejecutar un programa completo bajo el depurador.
+
+``` bash
+bash % python -m pdb someprogram.py
+```
+
+Ingresará automáticamente al depurador antes de la primera declaración, lo que te permitirá establecer puntos de interrupción y cambiar la configuración.
+
+Comandos comunes del depurador:
+
+``` code
+(Pdb) help # Obtener ayuda
+(Pdb) w(here) # Imprimir seguimiento de la pila
+(Pdb) d(own) # Bajar un nivel de pila
+(Pdb) u(p) # Subir un nivel de pila
+(Pdb) b(reak) loc # Establecer un punto de interrupción
+(Pdb) s(tep) # Ejecutar una instrucción
+(Pdb) c(ontinue) # Continuar la ejecución
+(Pdb) l(ist) # Listar el código fuente
+(Pdb) a(rgs) # Imprimir los argumentos de la función actual
+(Pdb) !statement # Ejecutar la instrucción
+```
+
+Para los puntos de interrupción, la ubicación es una de las siguientes:
+
+``` código
+(Pdb) b 45 # Línea 45 en el archivo actual
+(Pdb) b file.py:45 # Línea 45 en file.py
+(Pdb) b foo # Función foo() en el archivo actual
+(Pdb) b module.foo # Función foo() en un módulo
+```
+
+#### Ejercicios
+
+##### Ejercicio 8.4: ¿Errores? ¿Qué errores?
+
+Funciona. ¡Envíalo!
+
+[Contenido](../Contents.Rmd) \| [Anterior (8.2 Registro, manejo de errores y diagnósticos)](02_Logging.Rmd) \| [Próximo (9 Paquetes)](../09_Packages/00_Overview.Rmd)

@@ -3,3 +3,200 @@ title: "05_Decorated_methods"
 output: html_document
 ---
 
+[Contenido](../Contents.Rmd) \| [Anterior (7.4 Decoradores de funciones)](04_Function_decorators.Rmd) \| [Próximo (8 Pruebas y depuración)](../08_Testing_debugging/00_Overview.Rmd)
+
+### 7.5 Métodos estáticos y de clase
+
+Esta sección analiza algunos decoradores integrados que se utilizan en combinación con definiciones de métodos.
+
+#### Decoradores predefinidos
+
+Existen decoradores predefinidos que se utilizan para especificar tipos especiales de métodos en las definiciones de clase.
+
+``` python
+class Foo:
+    def bar(self,a):
+    ...
+
+    @staticmethod
+        def spam(a):
+        ...
+
+    @classmethod
+    def grok(cls,a):
+        ...
+
+    @property
+    def name(self):
+        ...
+```
+
+Veamos uno por uno.
+
+#### Métodos estáticos
+
+`@staticmethod` se utiliza para definir los llamados métodos de clase *estáticos* (de C++/Java). Un método estático es una función que forma parte de la clase, pero que *no* opera en instancias.
+
+``` python
+class Foo(object):
+    @staticmethod
+    def bar(x):
+        print('x =', x)
+
+>>> Foo.bar(2) x=2
+>>>
+```
+
+Los métodos estáticos se utilizan a veces para implementar código de soporte interno para una clase. Por ejemplo, código para ayudar a administrar instancias creadas (administración de memoria, recursos del sistema, persistencia, bloqueo, etc.). También se utilizan en ciertos patrones de diseño (no se analizan aquí).
+
+#### Métodos de clase
+
+`@classmethod` se utiliza para definir métodos de clase. Un método de clase es un método que recibe el objeto de *clase* como primer parámetro en lugar de la instancia.
+
+``` python
+class Foo:
+    def bar(self):
+        print(self)
+
+    @classmethod
+    def spam(cls):
+        print(cls)
+
+>>> f = Foo()
+>>> f.bar()
+<__main__.Foo object at 0x971690> # La instancia `f`
+>>> Foo.spam()
+<class '__main__.Foo'> # La clase `Foo`
+>>>
+```
+
+Los métodos de clase se utilizan con mayor frecuencia como una herramienta para definir constructores alternativos.
+
+``` python
+class Date:
+    def __init__(self,year,month,day):
+        self.year = year
+        self.month = month
+        self.day = day
+
+    @classmethod
+    def today(cls):
+        # Observa cómo se pasa la clase como argumento
+        tm = time.localtime()
+        # Y se usa para crear una nueva instancia
+        return cls(tm.tm_year, tm.tm_mon, tm.tm_mday)
+
+d = Date.today()
+print(d.__dict__)
+```
+
+Los métodos de clase resuelven algunos problemas complicados con características como la herencia.
+
+``` python
+class Date:
+    ...
+    @classmethod
+    def today(cls):
+        # Obtiene la clase correcta (p. ej., `NewDate`)
+        tm = time.localtime()
+        return cls(tm.tm_year, tm.tm_mon, tm.tm_mday)
+
+class NewDate(Date):
+    ...
+
+d = NewDate.today()
+```
+
+#### Ejercicios
+
+##### Ejercicio 7.11: Métodos de clase en la práctica
+
+En los archivos `report.py` y `portfolio.py`, la creación de un objeto `Portfolio` es un poco confusa. Por ejemplo, el programa `report.py` tiene un código como este:
+
+``` python
+def read_portfolio(filename, **opts):
+    '''
+    Lee un archivo de cartera de acciones en una lista de diccionarios con claves
+    name, shares, and price.
+    '''
+    with open(filename) as lines:
+        portdicts = fileparse.parse_csv(lines,
+                                        select=['name','shares','price'],
+                                        types=[str,int,float],
+                                        **opts)
+
+    portfolio = [ Stock(**d) for d in portdicts ]
+    return Portfolio(portfolio)
+```
+
+y el archivo `portfolio.py` define `Portfolio()` con un inicializador extraño como este:
+
+``` python
+class Portfolio:
+    def __init__(self, holdings):
+        self.holdings = holdings
+    ...
+```
+
+Francamente, la cadena de responsabilidad es un poco confusa porque el código está disperso. Si se supone que una clase `Portfolio` contiene una lista de instancias de `Stock`, tal vez debería cambiar la clase para que sea un poco más clara. Así:
+
+``` python
+# portfolio.py
+
+import stock
+
+class Portfolio:
+    def __init__(self):
+        self.holdings = []
+
+    def append(self, holding):
+        if not isinstance(holding, stock.Stock):
+            raise TypeError('Se esperaba una instancia de Stock')
+        self.holdings.append(holding)
+    ...
+```
+
+Si quieres leer un portfolio desde un archivo CSV, tal vez deberías crear un método de clase para ello:
+
+``` python
+# portfolio.py
+
+import fileparse
+import stock
+
+class Portfolio:
+    def __init__(self):
+        self.holdings = []
+
+    def append(self, holding):
+        if not isinstance(holding, stock.Stock):
+            raise TypeError('Se esperaba una instancia de Stock')
+        self.holdings.append(holding)
+
+    @classmethod
+    def from_csv(cls, lines, **opts):
+        self = cls()
+        portdicts = fileparse.parse_csv(lines,
+                                        select=['name','shares','price'],
+                                        types=[str,int,float],
+                                        **opts)
+
+        for d in portdicts:
+            self.append(stock.Stock(**d))
+
+        return self
+```
+
+Para usar esta nueva clase Portfolio, ahora puede escribir código como este:
+
+```         
+>>> from portfolio import Portfolio
+>>> with open('Data/portfolio.csv') as lines:
+...     port = Portfolio.from_csv(lines)
+...
+>>>
+```
+
+Realice estos cambios en la clase `Portfolio` y modifique el código `report.py` para utilizar el método de clase.
+
+[Contenido](../Contents.Rmd) \| [Anterior (7.4 Decoradores de funciones)](04_Function_decorators.Rmd) \| [Próximo (8 Pruebas y depuración)](../08_Testing_debugging/00_Overview.Rmd)

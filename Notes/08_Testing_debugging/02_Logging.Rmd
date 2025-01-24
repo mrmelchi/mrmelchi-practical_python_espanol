@@ -3,3 +3,241 @@ title: "02_Logging"
 output: html_document
 ---
 
+[Contenido](../Contents.Rmd) \| [Anterior (8.1 Pruebas)](01_Testing.Rmd) \| [Próximo (8.3 Depuración)](03_Debugging.Rmd)
+
+### 8.2 Registro, manejo de errores y diagnósticos
+
+Esta sección presenta brevemente el módulo de registro.
+
+#### Módulo de registro
+
+El módulo `logging` es un módulo de la biblioteca estándar para registrar información de diagnóstico. También es un módulo muy grande con muchas funciones sofisticadas. Mostraremos un ejemplo simple para ilustrar su utilidad.
+
+#### Excepciones revisitadas
+
+En los ejercicios, escribimos una función `parse()` que se parecía a esto:
+
+``` python
+# fileparse.py
+def parse(f, types=None, names=None, delimiter=None):
+    records = []
+    for line in f:
+        line = line.strip()
+        if not line: continue
+        try:
+            records.append(split(line,types,names,delimiter))
+        except ValueError as e:
+            print("No se pudo analizar :", line)
+            print("Razón :", e)
+    return records
+```
+
+Concéntrese en la declaración `try-except`. ¿Qué debería hacer en el bloque `except`?
+
+¿Debería imprimir un mensaje de advertencia?
+
+``` python
+try:
+    records.append(split(line,types,names,delimiter))
+except ValueError as e:
+    print("No se pudo analizar :", line)
+    print("Razón :", e)
+```
+
+¿O lo ignoras en silencio?
+
+``` python
+try:
+    records.append(split(line,types,names,delimiter))
+except ValueError as e:
+    pass
+```
+
+Ninguna solución es satisfactoria porque a menudo se desean *ambos* comportamientos (seleccionables por el usuario).
+
+#### Uso del registro
+
+El módulo `logging` puede solucionar este problema.
+
+``` python
+# fileparse.py
+import logging
+log = logging.getLogger(__name__)
+
+def parse(f,types=None,names=None,delimiter=None):
+    ...
+    try:
+        records.append(split(line,types,names,delimiter))
+    except ValueError as e:
+        log.warning("No se pudo analizar: %s", line)
+        log.debug("Razón: %s", e)
+```
+
+Se modifica el código para emitir mensajes de advertencia o un objeto `Logger` especial. El creado con `logging.getLogger(__name__)`.
+
+#### Conceptos básicos de registro
+
+Crear un objeto de registro.
+
+``` python
+log = logging.getLogger(name) # name es una cadena
+```
+
+Emisión de mensajes de registro.
+
+``` python
+log.critical(message [, args])
+log.error(message [, args])
+log.warning(message [, args])
+log.info(message [, args])
+log.debug(message [, args])
+```
+
+*Cada método representa un nivel de gravedad diferente.*
+
+Todos ellos crean un mensaje de registro formateado. `args` se utiliza con el operador `%` para crear el mensaje.
+
+``` python
+logmsg = message % args # Escrito en el registro
+```
+
+#### Configuración del registro
+
+El comportamiento del registro se configura por separado.
+
+``` python
+# main.py
+
+...
+
+if __name__ == '__main__':
+    import logging
+    logging.basicConfig(
+        filename  = 'app.log',      # Archivo de salida del registro
+        level     = logging.INFO,   # Nivel de salida
+    )
+```
+
+Normalmente, esta es una configuración única al iniciar el programa. La configuración es independiente del código que realiza las llamadas de registro.
+
+#### Comentarios
+
+El registro es altamente configurable. Puede ajustar cada aspecto del mismo: archivos de salida, niveles, formatos de mensajes, etc. Sin embargo, el código que usa el registro no tiene que preocuparse por eso.
+
+#### Ejercicios
+
+##### Ejercicio 8.2: Agregar registro a un módulo
+
+En `fileparse.py`, hay un manejo de errores relacionado con excepciones causadas por una entrada incorrecta. Se parece a esto:
+
+``` python
+# fileparse.py
+import csv
+import logging
+log = logging.getLogger(__name__)
+
+def parse_csv(lines, select=None, types=None, has_headers=True, delimiter=',', silence_errors=False):
+    '''
+    Analiza un archivo CSV en una lista de registros con conversión de tipo.
+    '''
+    if select and not has_headers:
+        raise RuntimeError('select requires column headers')
+
+    rows = csv.reader(lines, delimiter=delimiter)
+
+    # Leer los encabezados de archivo (si los hay)
+    headers = next(rows) if has_headers else []
+
+    # Si se han seleccionado columnas específicas, crear índices para filtrar y establecer columnas de salida
+    if select:
+        indices = [ headers.index(colname) for colname in select ]
+        headers = select
+
+    records = []
+    for rowno, row in enumerate(rows, 1):
+        if not row:     # Omitir filas sin datos
+            continue
+
+        # Si se seleccionan índices de columnas específicos, seleccionarlos
+        if select:
+            row = [ row[index] for index in indices]
+
+        # Aplicar conversión de tipo a la fila
+        if types:
+            try:
+                row = [func(val) for func, val in zip(types, row)]
+            except ValueError as e:
+                if not silence_errors:
+                    log.warning("Row %d: No se puede analizar %s", rowno, row)
+                    log.debug("Row %d: Rezón %s", rowno, e)
+                continue
+
+        # Crea un diccionario o una tupla
+        if headers:
+            record = dict(zip(headers, row))
+        else:
+            record = tuple(row)
+        records.append(record)
+
+    return records
+```
+
+Ahora que has realizado estos cambios, prueba a usar Parte de tu código contiene datos erróneos.
+
+``` python
+>>> import report
+>>> a = report.read_portfolio('Data/missing.csv')
+Row 4: Bad row: ['MSFT', '', '51.23']
+Row 7: Bad row: ['IBM', '', '70.44']
+>>>
+```
+
+Si no hace nada, solo obtendrá mensajes de registro para el nivel `WARNING` y superiores. La salida se verá como simples declaraciones de impresión. Sin embargo, Si configura el módulo de registro, obtendrá información adicional sobre los niveles de registro, el módulo y más. Escriba estos pasos para comprobarlo:
+
+``` python
+>>> import logging
+>>> logging.basicConfig()
+>>> a = report.read_portfolio('Data/missing.csv')
+WARNING:fileparse:Row 4: Bad row: ['MSFT', '', '51.23']
+WARNING:fileparse:Row 7: Bad row: ['IBM', '', '70.44']
+>>>
+```
+
+Notarás que no ves El resultado de la operación `log.debug()`. Escriba esto para cambiar el nivel.
+
+``` python
+>>> logging.getLogger('fileparse').setLevel(logging.DEBUG)
+>>> a = report.read_portfolio('Data/missing.csv')
+WARNING:fileparse:Row 4: Bad row: ['MSFT', '', '51.23']
+DEBUG:fileparse:Row 4: Reason: invalid literal for int() with base 10: ''
+WARNING:fileparse:Row 7: Bad row: ['IBM', '', '70.44']
+DEBUG:fileparse:Row 7: Reason: invalid literal for int() with base 10: ''
+>>>
+```
+
+Desactive todos los mensajes de registro, excepto los más críticos:
+
+```         
+>>> logging.getLogger ('fileparse').setLevel(logging.CRITICAL)
+>>> a = report.read_portfolio('Datos/missing.csv')
+>>>
+```
+
+##### Ejercicio 8.3: Agregar registros a un programa
+
+Para agregar registro a una aplicación, necesita tener algún mecanismo para inicializar el módulo de registro en el módulo principal. Una forma de hacerlo es incluir un código de configuración similar a este:
+
+``` python
+# Este archivo establece la configuración básica del módulo de registro.
+# Cambie la configuración aquí para ajustar la salida del registro según sea necesario.
+import logging
+logging.basicConfig(
+    filename = 'app.log',            # Nombre del archivo de registro (omitir para usar stderr)
+    filemode = 'w',                  # Modo de archivo (use 'a' para agregar)
+    level    = logging.WARNING,      # # Nivel de registro (DEPURACIÓN, INFORMACIÓN, ADVERTENCIA, ERROR o CRÍTICO)
+)
+```
+
+Nuevamente, deberá colocar esto en algún lugar de los pasos de inicio de su programa. Por ejemplo, ¿dónde colocaría esto en su `report ¿Programa .py`?
+
+[Contenido](../Contents.Rmd) \| [Anterior (8.1 Pruebas)](01_Testing.Rmd) \| [Próximo (8.3 Depuración)](03_Debugging.Rmd)

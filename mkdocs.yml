@@ -1,0 +1,8 @@
+site_name: mrmelchi-practical_python_espanol
+site_author: Mario R. Melchiori
+site_url: https://mrmelchi.github.io/mrmelchi-practical_python_espanol/
+theme:
+   name: material
+markdown_extensions:
+   - toc:
+      permalink: []

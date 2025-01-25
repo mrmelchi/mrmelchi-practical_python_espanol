@@ -3,3 +3,14 @@ title: "TheEnd"
 output: html_document
 ---
 
+# ¡Fin!
+
+Has llegado al final del curso. Gracias por tu tiempo y tu atención.
+¡Que tu futuro hackeo de Python sea divertido y productivo!
+
+Siempre me alegra recibir comentarios. Puedes encontrarme en [https://dabeaz.com](https://dabeaz.com)
+o en Twitter en [@dabeaz](https://twitter.com/dabeaz). - David Beazley.
+
+Por errores en la traducción Mario.Melchiori@gmail.com
+
+[Contenido](../Contents.Rmd) \| [Inicio](../..)

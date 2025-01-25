@@ -1,5 +1,446 @@
 ---
 title: "01_Packages"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
+[Contenido](../Contents.Rmd) \| [Anterior (8.3
+Depuración)](../08_Testing_debugging/03_Debugging.Rmd) \| [Próximo (9.2
+Módulos de terceros)](02_Third_party.Rmd)
+
+### 9.1 Paquetes
+
+Si escribe un programa más grande, no querrá organizarlo como una gran
+colección de archivos independientes en el nivel superior. Esta sección
+presenta el concepto de paquete.
+
+#### Módulos
+
+Cualquier archivo fuente de Python es un módulo.
+
+``` python
+# foo.py
+    def grok(a):
+        ...
+    def spam(b):
+        ...
+```
+
+Una declaración `import` carga y *ejecuta* un módulo.
+
+``` python
+# program.py
+import foo
+
+a = foo.grok(2)
+b = foo.spam('Hola')
+...
+```
+
+#### Paquetes vs. módulos
+
+Para colecciones de código más grandes, es común organizar los módulos
+en un paquete.
+
+``` code
+# Desde esto
+pcost.py
+report.py
+fileparse.py
+
+# a esto
+porty/
+    __init__.py
+    pcost.py
+    report.py
+    fileparse.py
+```
+
+Eliges un nombre y creas un directorio de nivel superior. `porty` en el
+ejemplo anterior (claramente elegir este nombre es el primer paso más
+importante).
+
+Agrega un archivo `__init__.py` al directorio. Puede estar vacío.
+
+Coloca tus archivos fuente en el directorio.
+
+#### Uso de un paquete
+
+Un paquete sirve como un espacio de nombres para las importaciones.
+
+Esto significa que ahora hay importaciones de varios niveles.
+
+``` python
+import porty.report
+port = porty.report.read_portfolio('port.csv')
+```
+
+Existen otras variaciones de las declaraciones de importación.
+
+``` python
+from porty import report
+port = report.read_portfolio('portfolio.csv')
+
+from porty.report import read_portfolio
+port = read_portfolio('portfolio.csv')
+```
+
+#### Dos problemas
+
+Hay dos problemas principales con este enfoque.
+
+-   Las importaciones entre archivos del mismo paquete se interrumpen.
+-   Los scripts principales ubicados dentro del paquete se interrumpen.
+
+Básicamente, todo se interrumpe. Pero, aparte de eso, funciona.
+
+#### Problema: Importaciones
+
+Las importaciones entre archivos del mismo paquete *ahora deben incluir
+el nombre del paquete en la importación*. Recuerde la estructura.
+
+``` code
+porty/
+    __init__.py
+    pcost.py
+    report.py
+    fileparse.py
+```
+
+Ejemplo de importación modificado.
+
+``` python
+# report.py
+from porty import fileparse
+
+def read_portfolio(filename):
+    return fileparse.parse_csv(...)
+```
+
+Todas las importaciones son *absolutas*, no relativas.
+
+``` python
+# report.py
+import fileparse # FALLA. fileparse not found
+
+...
+```
+
+#### Importaciones relativas
+
+En lugar de usar directamente el nombre del paquete, puede usar `.` para
+hacer referencia al paquete actual.
+
+``` python
+# report.py
+from . import fileparse
+
+def read_portfolio(filename):
+    return fileparse.parse_csv(...)
+```
+
+Sintaxis:
+
+``` python
+from . import modname
+```
+
+Esto facilita cambiar el nombre del paquete.
+
+#### Problema: Scripts principales
+
+Ejecutar un submódulo de paquete como un script principal falla.
+
+``` bash
+bash $ python porty/pcost.py # FALLA
+...
+```
+
+*Razón: estás ejecutando Python en un solo archivo y Python no ve el
+resto de la estructura del paquete correctamente (`sys.path` es
+incorrecto).*
+
+Todas las importaciones fallan. Para solucionar esto, debes ejecutar tu
+programa de una manera diferente, usando la opción `-m`.
+
+``` bash
+bash $ python -m porty.pcost # FUNCIONA
+...
+```
+
+#### Archivos `__init__.py`
+
+El propósito principal de estos archivos es unir módulos.
+
+Ejemplo: consolidación de funciones
+
+``` python
+# porty/__init__.py
+from .pcost import portfolio_cost
+from .report import portfolio_report
+```
+
+Esto hace que los nombres aparezcan en el *nivel superior* al importar.
+
+``` python
+from porty import portfolio_cost
+portfolio_cost('portfolio.csv')
+```
+
+En lugar de usar las importaciones multinivel.
+
+``` python
+from porty import pcost
+pcost.portfolio_cost('portfolio.csv')
+```
+
+#### Otra solución para los scripts
+
+Como se indicó, ahora debe usar `-m package.module` para ejecutar
+scripts dentro de su paquete.
+
+``` bash
+bash % python3 -m porty.pcost portfolio.csv
+```
+
+Existe otra alternativa: escriba un nuevo script de nivel superior.
+
+``` python
+#!/usr/bin/env python
+# pcost.py
+import porty.pcost
+import sys
+porty.pcost.main(sys.argv)
+```
+
+Este script se encuentra *fuera* del paquete. Por ejemplo, si observamos
+la estructura del directorio:
+
+```         
+pcost.py # script de nivel superior
+porty/ # directorio de paquetes
+    __init__.py
+    pcost.py
+    ...
+```
+
+#### Estructura de la aplicación
+
+La organización del código y la estructura de archivos son clave para la
+capacidad de mantenimiento de una aplicación.
+
+No existe un enfoque "universal" para Python. Sin embargo, una
+estructura que funciona para muchos problemas es algo como esto.
+
+``` code
+porty-app/
+    README.txt
+    script.py # SCRIPT
+    porty/
+        # CÓDIGO DE LA BIBLIOTECA
+        __init__.py
+        pcost.py
+        report.py
+        fileparse.py
+```
+
+El `porty-app` de nivel superior es un contenedor para todo lo demás:
+documentación, scripts de nivel superior, ejemplos, etc.
+
+Nuevamente, los scripts de nivel superior (si los hay) deben existir
+fuera del paquete de código. Un nivel por encima.
+
+``` python
+#!/usr/bin/env python
+# porty-app/script.py
+import sys
+import porty
+
+porty.report.main(sys.argv)
+```
+
+#### Ejercicios
+
+En este punto, tienes un directorio con varios programas:
+
+```         
+pcost.py # calcula el costo de la cartera
+report.py # crea un informe
+ticker.py # produce un ticker de acciones en tiempo real
+```
+
+Hay una variedad de módulos de soporte con otras funciones:
+
+```         
+stock.py # Clase Stock
+portfolio.py # Clase Portfolio
+fileparse.py # Análisis CSV
+tableformat.py # Tablas formateadas
+follow.py # Seguimiento de un archivo de registro
+typedproperty.py # Propiedades de clase tipificadas
+```
+
+En este ejercicio, vamos a limpiar el código y ponerlo en un paquete
+común.
+
+##### Ejercicio 9.1: Crear un paquete simple
+
+Cree un directorio llamado `porty/` y coloque todos los archivos de
+Python anteriores en él. Además, cree un archivo `__init__.py` vacío y
+colóquelo en el directorio. Debería tener un directorio de archivos como
+este:
+
+```         
+porty/
+    __init__.py
+    fileparse.py
+    follow.py
+    pcost.py
+    portfolio.py
+    report.py
+    stock.py
+    tableformat.py
+    ticker.py
+    typedproperty.py
+```
+
+Elimine el archivo `__pycache__` que se encuentra en su directorio. Este
+contiene módulos de Python precompilados de antes. Queremos comenzar de
+nuevo.
+
+Intente importar algunos de los módulos del paquete:
+
+``` python
+>>> import porty.report
+>>> import porty.pcost
+>>> import porty.ticker
+```
+
+Si estas importaciones fallan, vaya al archivo apropiado y corrija las
+importaciones del módulo para incluir una importación relativa al
+paquete. Por ejemplo, una declaración como `import fileparse` podría
+cambiar a lo siguiente:
+
+```         
+# report.py
+from . import fileparse
+...
+```
+
+Si tiene una declaración como `from fileparse import parse_csv`, cambie
+el código a lo siguiente:
+
+```         
+# report.py
+from .fileparse import parse_csv
+...
+```
+
+##### Ejercicio 9.2: Crear un directorio de aplicación
+
+Poner todo el código en un "paquete" no suele ser suficiente para una
+aplicación. A veces hay archivos de soporte, documentación, scripts y
+otras cosas. Estos archivos deben existir FUERA del directorio `porty/`
+que creó anteriormente.
+
+Cree un nuevo directorio llamado `porty-app`. Mueva el directorio
+`porty` que creó en el Ejercicio 9.1 a ese directorio. Copie los
+archivos de prueba `Data/portfolio.csv` y `Data/prices.csv` en este
+directorio. Además, cree un archivo `README.txt` con información sobre
+usted. Ahora, su código debería estar organizado de la siguiente manera:
+
+porty-app/ portfolio.csv prices.csv README.txt porty/ **init**.py
+fileparse.py follow.py pcost.py portfolio.py report.py stock.py
+tableformat.py ticker.py typedproperty.py
+
+Para ejecutar su código, debe asegurarse de estar trabajando en el
+directorio de nivel superior `porty-app/`. Por ejemplo, desde la
+terminal:
+
+``` python
+bash % cd porty-app
+bash % python
+>>> import porty.report
+>>>
+```
+
+Intente ejecutar algunos de sus scripts anteriores como un programa
+principal:
+
+``` bash
+bash % cd porty-app
+bash % python3 -m porty.report portfolio.csv prices.csv txt
+      Name     Shares      Price     Change
+---------- ---------- ---------- ----------
+        AA        100       9.22     -22.98
+       IBM         50     106.28      15.18
+       CAT        150      35.46     -47.98
+      MSFT        200      20.89     -30.34
+        GE         95      13.48     -26.89
+      MSFT         50      20.89     -44.21
+       IBM        100     106.28      35.84
+
+bash %
+```
+
+##### Ejercicio 9.3: Scripts de nivel superior
+
+Usar el comando `python -m` suele ser un poco extraño. Es posible que
+desee escribir un script de nivel superior que simplemente se ocupe de
+las rarezas de los paquetes. Cree un script `print-report.py` que
+produzca el informe anterior:
+
+``` python
+#!/usr/bin/env python3
+# print-report.py
+import sys
+from porty.report import main
+main(sys.argv)
+```
+
+Coloque este script en el directorio de nivel superior `porty-app/`.
+Asegúrate de que puedes ejecutarlo en esa ubicación:
+
+``` bash
+bash % cd porty-app
+bash % python print-report.py portfolio.csv prices.csv txt
+Nombre Acciones Precio Cambio
+---------- ---------- ---------- ----------
+AA 100 9,22 -22,98
+IBM 50 106,28 15,18
+CAT 150 35,46 -47,98
+MSFT 200 20,89 -30,34
+GE 95 13,48 -26,89
+MSFT 50 20,89 -44,21
+IBM 100 106,28 35,84
+
+bash %
+```
+
+Tu código final ahora debería estar estructurado de manera similar a
+esto:
+
+```         
+porty-app/
+    portfolio.csv
+    prices.csv
+    print-report.py
+    README.txt
+    porty/
+        __init__.py
+        fileparse.py
+        follow.py
+        pcost.py
+        portfolio.py
+        report.py
+        stock.py
+        tableformat.py
+        ticker.py
+        typedproperty.py
+```
+
+[Contenido](../Contents.Rmd) \| [Anterior (8.3
+Depuración)](../08_Testing_debugging/03_Debugging.Rmd) \| [Próximo (9.2
+Módulos de terceros)](02_Third_party.Rmd)

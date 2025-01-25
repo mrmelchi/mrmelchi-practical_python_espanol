@@ -3,3 +3,69 @@ title: "03_Distribution"
 output: html_document
 ---
 
+[Contenido](../Contents.Rmd) \| [Anterior (9.2 Módulos de terceros)](02_Third_party.Rmd) \| [Próximo (Fin)](TheEnd.Rmd)
+
+### 9.3 Entrega tu código a terceros
+
+En algún momento, es posible que desee entregar su código a otra persona, posiblemente solo a un compañero de trabajo. Esta sección proporciona la técnica más básica para hacerlo. Para obtener información más detallada, deberá consultar la [Guía del usuario de empaquetado de Python](https://packaging.python.org).
+
+#### Creación de un archivo setup.py
+
+Agregue un archivo `setup.py` al nivel superior del directorio de su proyecto.
+
+``` python
+# setup.py
+import setuptools
+
+setuptools.setup(
+    name="porty",
+    version="0.0.1",
+    author="Your Name",
+    author_email="you@example.com",
+    description="Practical Python Code",
+    packages=setuptools.find_packages(),
+)
+```
+
+#### Creación de MANIFEST.in
+
+Si hay archivos adicionales asociados con su proyecto, especifíquelos con un archivo `MANIFEST.in`. Por ejemplo:
+
+```         
+# MANIFEST.in
+include *.csv
+```
+
+Coloque el archivo `MANIFEST.in` en el mismo directorio que `setup.py`.
+
+#### Creación de una distribución de código fuente
+
+Para crear una distribución de su código, utilice el archivo `setup.py`. Por ejemplo:
+
+```         
+bash % python setup.py sdist
+```
+
+Esto creará un archivo `.tar.gz` o `.zip` en el directorio `dist/`. Ese archivo es algo que ahora puedes regalar a otros.
+
+#### Instalación de tu código
+
+Otros pueden instalar tu código Python usando `pip` de la misma manera que lo hacen con otros paquetes. Simplemente necesitan proporcionar el archivo creado en el paso anterior. Por ejemplo:
+
+```         
+bash % python -m pip install porty-0.0.1.tar.gz
+```
+
+#### Comentario
+
+Los pasos anteriores describen los conceptos básicos más mínimos para crear un paquete de código Python que puedes regalar a otra persona. En realidad, puede ser mucho más complicado dependiendo de las dependencias de terceros, si tu aplicación incluye o no código externo (es decir, C/C++), etc. Cubrir eso está fuera del alcance de este curso. Solo hemos dado un pequeño primer paso.
+
+#### Ejercicios
+
+##### Ejercicio 9.5: Crea un paquete
+
+Toma el código `porty-app/` que creaste para el Ejercicio 9.3 y ve si puedes recrear los pasos que se describen aquí. Específicamente, agrega un archivo `setup.py` y un archivo `MANIFEST.in` al directorio de nivel superior. Crea un archivo de distribución de origen ejecutando `python setup.py sdist`.
+
+Como paso final, ve si puedes instalar tu paquete en un entorno virtual de Python.
+
+[Contenido](../Contents.Rmd) \| [Anterior (9.2 Módulos de terceros)](02_Third_party.Rmd) \| [Próximo (Fin)](TheEnd.Rmd)

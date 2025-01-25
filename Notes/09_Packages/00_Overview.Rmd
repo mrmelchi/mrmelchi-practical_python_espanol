@@ -3,3 +3,16 @@ title: "00_Overview"
 output: html_document
 ---
 
+[Contenido](../Contenido.md) \| [Anterior (8 Pruebas y depuración)](../08_Pruebas_y_depuración/00_Descripción%20general.md)
+
+### 9 Paquetes
+
+Concluimos el curso con algunos detalles sobre cómo organizar su código en una estructura de paquete. También analizaremos la instalación de paquetes de terceros y la preparación para entregar su propio código a otros.
+
+El tema del empaquetado es una parte en constante evolución y excesivamente compleja del desarrollo de Python. En lugar de centrarse en herramientas específicas, el enfoque principal de esta sección está en algunos principios generales de organización de código que resultarán útiles sin importar qué herramientas utilice más adelante para entregar código o administrar dependencias.
+
+-   [9.1 Paquetes](01_Packages.Rmd)
+-   [9.2 Módulos de terceros](02_Third_party.Rmd)
+-   [9.3 Entrega tu código a terceross](03_Distribution.Rmd)
+
+[Contenido](../Contents.Rmd) \| [Anterior (8. Pruebas, registro y depuración)](../08_Testing_debugging/00_Overview.Rmd)

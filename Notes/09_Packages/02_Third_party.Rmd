@@ -3,3 +3,108 @@ title: "02_Third_party"
 output: html_document
 ---
 
+[Contenido](../Contents.Rmd) \| [Anterior (9.1 Paquetes)](01_Packages.Rmd) \| [Próximo (9.3 Entrega tu código a terceros)](03_Distribution.Rmd)
+
+### 9.2 Módulos de terceros
+
+Python tiene una gran biblioteca de módulos integrados (*baterías incluidas*).
+
+Hay incluso más módulos de terceros. Consúltelos en el [Índice de paquetes de Python](https://pypi.org/) o PyPi. O simplemente haga una búsqueda en Google de un tema específico.
+
+Cómo manejar dependencias de terceros es un tema en constante evolución con Python. Esta sección simplemente cubre los conceptos básicos para ayudarlo a comprender cómo funciona.
+
+#### La ruta de búsqueda de módulos
+
+`sys.path` es un directorio que contiene la lista de todos los directorios revisados ​​por la declaración `import`. Míralo:
+
+``` python
+>>> import sys
+>>> sys.path
+... mira el resultado...
+>>>
+```
+
+Si importas algo y no está ubicado en uno de esos directorios, obtendrás una excepción `ImportError`.
+
+#### Módulos de la biblioteca estándar
+
+Los módulos de la biblioteca estándar de Python generalmente provienen de una ubicación como `/usr/local/lib/python3.6`. Puedes averiguarlo con certeza haciendo una prueba corta:
+
+``` python
+>>> import re
+>>> re
+<module 're' from '/usr/local/lib/python3.6/re.py'>
+>>>
+```
+
+Simplemente mirar un módulo en el REPL es un buen consejo de depuración que debes conocer. Te mostrará la ubicación del archivo.
+
+#### Módulos de terceros
+
+Los módulos de terceros suelen estar ubicados en un directorio `site-packages` dedicado. Lo verás si realizas los mismos pasos que los anteriores:
+
+``` python
+>>> import numpy
+>>> numpy
+<module 'numpy' from '/usr/local/lib/python3.6/site-packages/numpy/__init__.py'>
+>>>
+```
+
+Nuevamente, mirar un módulo es un buen consejo de depuración si estás tratando de averiguar por qué algo relacionado con `import` no está funcionando como se esperaba.
+
+#### Instalación de módulos
+
+La técnica más común para instalar un módulo de terceros es usar `pip`. Por ejemplo:
+
+``` bash
+bash % python -m pip install packagename
+```
+
+Este comando descargará el paquete y lo instalará en el directorio `site-packages`.
+
+#### Problemas
+
+-   Es posible que estés usando una instalación de Python que no controlas directamente.
+-   Una instalación aprobada por la empresa
+-   Estás usando la versión de Python que viene con el sistema operativo.
+-   Es posible que no tengas permiso para instalar paquetes globales en la computadora.
+-   Es posible que existan otras dependencias.
+
+#### Entornos virtuales
+
+Una solución común para los problemas de instalación de paquetes es crear un denominado "entorno virtual" para ti mismo. Naturalmente, no existe una "única forma" de hacerlo; de hecho, existen varias herramientas y técnicas que compiten entre sí. Sin embargo, si estás usando una instalación estándar de Python, puedes intentar escribir lo siguiente:
+
+``` bash
+bash % python -m venv mypython
+bash %
+```
+
+Después de unos minutos de espera, tendrás un nuevo directorio `mypython` que es tu propia pequeña instalación de Python. Dentro de ese directorio encontrarás un directorio `bin/` (Unix) o un directorio `Scripts/` (Windows). Si ejecuta el script `activate` que se encuentra allí, "activará" esta versión de Python, convirtiéndolo en el comando `python` predeterminado para el shell. Por ejemplo:
+
+``` bash
+bash % source mypython/bin/activate
+(mypython) bash %
+```
+
+Desde aquí, ahora puede comenzar a instalar paquetes de Python por su cuenta. Por ejemplo:
+
+```         
+(mypython) bash % python -m pip install pandas
+...
+```
+
+Para experimentar y probar diferentes paquetes, un entorno virtual generalmente funcionará bien. Si, por otro lado, está creando una aplicación y tiene dependencias de paquetes específicas, ese es un problema ligeramente diferente.
+
+#### Manejo de dependencias de terceros en su aplicación
+
+Si ha escrito una aplicación y tiene dependencias de terceros específicas, un desafío se relaciona con la creación y preservación del entorno que incluye su código y las dependencias. Lamentablemente, esta ha sido un área de gran confusión y cambios frecuentes durante la existencia de Python. Sigue evolucionando incluso ahora.
+
+En lugar de proporcionar información que seguramente quedará desactualizada pronto, le recomiendo que consulte la [Guía del usuario de empaquetado de Python] <https://packaging.python.org>).
+
+#### Ejercicios
+
+##### Ejercicio 9.4: Creación de un entorno virtual
+
+Vea si puede recrear los pasos para crear un entorno virtual e instalar pandas en él como se muestra arriba.
+
+[Contenido](../Contents.Rmd) \| [Anterior (9.1 Paquetes)](01_Packages.Rmd) \| [Próximo (9.3 Entrega tu código a terceros)](03_Distribution.Rmd)
